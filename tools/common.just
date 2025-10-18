@@ -24,4 +24,12 @@ gen-stubs: fetch-proto
 
 update: gen-stubs clean
 
+cmake-build:
+    cd build \
+    cmake .. \
+    cmake --build . \
+
+cmake-launch: 
+    ./moderation-service
+
 
