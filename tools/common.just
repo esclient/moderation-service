@@ -11,7 +11,7 @@ fetch-proto:
     {{DOWN}} "https://raw.githubusercontent.com/esclient/protos/{{PROTO_TAG}}/{{PROTO_NAME}}" {{DOWN_OUT}} "{{TMP_DIR}}/{{PROTO_NAME}}"
 
 run:
-    ENV=dev PYTHONPATH=src ./tools/load_envs.sh pdm run run-server
+    ENV=dev PATH=src ./tools/load_envs.sh pdm run run-server
 
 gen-stubs: fetch-proto
     {{MKDIR}} "{{OUT_DIR}}"

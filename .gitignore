@@ -42,3 +42,14 @@
 
 .env
 .log
+
+.proto
+
+# CMake build folder
+/build/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.log
