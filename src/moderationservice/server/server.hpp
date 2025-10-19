@@ -12,7 +12,7 @@
 
 class Server {
     public: 
-        explicit Server(std::string server_address, std::shared_prt<grpc:: Service> service = nullptr, std::string server_name = "Server");
+        explicit Server(std::string server_address, std::shared_ptr<grpc::Service> service = nullptr, std::string server_name = "Server");
 
         void Start();
         void Stop();
@@ -25,4 +25,4 @@ class Server {
 
         // interceptors (middlewares in grpc)
         std::vector<std::unique_ptr<grpc::experimental::ServerInterceptorFactoryInterface>> interceptor_creators_;
-}
+};

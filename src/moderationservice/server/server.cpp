@@ -16,7 +16,7 @@ void Server::Start()
 
     builder.AddListeningPort(server_address_, grpc::InsecureServerCredentials());
 
-    builder.experimental().SetInterceptorCreators(this->interceptor_creators_);
+    builder.experimental().SetInterceptorCreators(std::move(this->interceptor_creators_));
 
     builder.RegisterService(this->service_.get());
 

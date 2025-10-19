@@ -3,14 +3,17 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/support/interceptor.h>
 #include <grpcpp/support/server_interceptor.h>
+#include <grpcpp/server_context.h>
+#include <grpcpp/impl/codegen/server_interceptor.h>
 
-class LoggerInterceptor final : public grpc::experimental::ServerInterceptor {
+
+class LoggerInterceptor final : public grpc::experimental::Interceptor {
     public: 
         explicit LoggerInterceptor(grpc::experimental::ServerRpcInfo* info) {
             std::string method = info->method();
             if(method == "unknown")
             {
-                std::cout << "[LoggerInterceptor] Unknown method called." << std::endl
+                std::cout << "[LoggerInterceptor] Unknown method called." << std::endl;
             }
             else
             {

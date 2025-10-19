@@ -1,23 +1,23 @@
 #pragma once
 
-#include <string>
 
-inline std::string get_env(const std::string &key, const std::string &default_value)
-{
-    std::string value = std::getenv(key.c_str());
-    return !value.empty() ? value : default_value;
-}
+#include <string>
+#include <cstdlib>
+
 
 struct Config {
     std::string host;
     std::string port;
-
+    
     static Config New() {
         Config config;
-        config.host = get_env("GRPC_HOST", "0.0.0.0");
-        config.port = get_env("GRPC_PORT", "50055");
-
+        
+        const char* host_env = std::getenv("GRPC_HOST");
+        config.host = host_env ? host_env : "0.0.0.0";
+        
+        const char* port_env = std::getenv("GRPC_PORT");
+        config.port = port_env ? port_env : "50055";
+        
         return config;
-
     }
-}
+};

@@ -19,7 +19,7 @@ class ModerationService final : public moderation::ModerationService::Service {
         grpc::Status ModerateObject(grpc::ServerContext* context, const moderation::ModerateObjectRequest* request, moderation::ModerateObjectResponse* response) override;
     private:
         // Mock data
-        std::unordered_map<std::string, moderation::Moderation> moderations_;
-        std::unordered_map<std::string, std::vector<moderation::Moderation>> user_moderations_;
+        std::unordered_map<int64_t, moderation::ModerateObjectRequest> moderations_;
+        std::unordered_map<int64_t, std::vector<moderation::ModerateObjectResponse>> user_moderations_;
         std::mutex mutex_;
 };

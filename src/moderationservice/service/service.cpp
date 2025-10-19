@@ -2,23 +2,14 @@
 
 ModerationService::ModerationService() {
     // Initialize mock data
-    moderation::Moderation mod1;
-    mod1.set_id("1");
-    mod1.set_user_id("1");
-    mod1.set_object_id("1");
-    mod1.set_reason("Inappropriate content");
+    moderation::ModerateObjectRequest mod1;
+    mod1.set_id(1);
+    mod1.set_text("Inappropriate content");
 
-    moderation::Moderation mod2;
-    mod2.set_id("2");
-    mod2.set_user_id("2");
-    mod2.set_object_id("2");
-    mod2.set_reason("Spam");
+    moderation::ModerateObjectResponse mod2;
+    mod2.set_success(true);
 
     moderations_[mod1.id()] = mod1;
-    moderations_[mod2.id()] = mod2;
-
-    user_moderations_[mod1.user_id()].push_back(mod1);
-    user_moderations_[mod2.user_id()].push_back(mod2);}
 
 }
 
@@ -26,13 +17,13 @@ Status ModerationService::ModerateObject(grpc::ServerContext* context, const mod
 {
     std::lock_guard<std::mutex> Lock(this->mutex_);
 
-    std::string object_id = request->object_id();
-    if(this->moderations_.find(object_id) == this->moderations_.end()) {
+    int64_t id = request->id();
+    if(this->moderations_.find(id) == this->moderations_.end()) {
         return Status(grpc::StatusCode::NOT_FOUND, "Not found");
     }
 
-    moderation::Moderation moderation = this->moderations_[object_id];
-    response->mutable_moderation().CopyFrom(moderation);
+    moderation::ModerateObjectRequest moderation = this->moderations_[id];
+    response->set_success(true);
 
     return Status::OK;
 }
