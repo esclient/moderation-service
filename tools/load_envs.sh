@@ -5,7 +5,7 @@ if [ -f .env ]; then
     export $(grep -v '^#' .env | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed 's/"//g' | sed "s/'//g" | xargs)
 fi
 
-CONFIG="configs/${ENV}.yaml"
+CONFIG="config/${ENV}.yaml"
 [ ! -f "$CONFIG" ] && echo "ERROR: Config not found: $CONFIG" >&2 && exit 1
 
 eval "$(yq eval 'to_entries | .[] | "export " + .key + "='\''" + (.value | tostring) + "'\''"' "$CONFIG")"

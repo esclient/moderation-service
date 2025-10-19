@@ -1,4 +1,5 @@
 #include "server.hpp"
+#include <grpcpp/ext/proto_server_reflection_plugin.h>
 
 Server::Server(std::string server_address, std::shared_ptr<grpc::Service> service, std::string server_name)
     : server_address_(server_address), service_(service), server_name_(server_name) {
@@ -16,14 +17,14 @@ void Server::Start()
 
     builder.AddListeningPort(server_address_, grpc::InsecureServerCredentials());
 
+    builder.RegisterService(this->service_.get());
+    
+    grpc::reflection::InitProtoReflectionServerBuilderPlugin();
+
     builder.experimental().SetInterceptorCreators(std::move(this->interceptor_creators_));
 
-    builder.RegisterService(this->service_.get());
-
     this->server_ = builder.BuildAndStart();
-
     std::cout << this->server_name_ << " listening on " << this->server_address_ << std::endl;
-
     this->server_->Wait();
 }
 

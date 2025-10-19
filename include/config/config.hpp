@@ -12,11 +12,11 @@ struct Config {
     static Config New() {
         Config config;
         
-        const char* host_env = std::getenv("GRPC_HOST");
+        const char* host_env = std::getenv("HOST");
         config.host = host_env ? host_env : "0.0.0.0";
         
-        const char* port_env = std::getenv("GRPC_PORT");
-        config.port = port_env ? port_env : "50055";
+        const char* port_env = std::getenv("PORT");
+        config.port = port_env ? port_env : "7006";
         
         return config;
     }

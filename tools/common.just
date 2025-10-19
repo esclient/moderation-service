@@ -2,6 +2,7 @@ MKDIR := 'mkdir -p'
 RM := 'rm -rf ' + TMP_DIR
 DOWN := 'curl -fsSL'
 DOWN_OUT := '-o'
+ENV := env_var_or_default("ENV", "dev")
 
 clean:
     {{RM}}
@@ -9,9 +10,6 @@ clean:
 fetch-proto:
     {{MKDIR}} "{{TMP_DIR}}"
     {{DOWN}} "https://raw.githubusercontent.com/esclient/protos/{{PROTO_TAG}}/{{PROTO_NAME}}" {{DOWN_OUT}} "{{TMP_DIR}}/{{PROTO_NAME}}"
-
-run:
-    ENV=dev PATH=src ./tools/load_envs.sh pdm run run-server
 
 gen-stubs: fetch-proto
     {{MKDIR}} "{{OUT_DIR}}"
@@ -24,12 +22,11 @@ gen-stubs: fetch-proto
 
 update: gen-stubs clean
 
-cmake-build:
-    cd build \
-    cmake .. \
-    cmake --build . \
+build:
+    mkdir -p build
+    cd build && cmake .. && cmake --build .
 
-cmake-launch: 
-    ./moderation-service
+run: build
+    ENV={{ENV}} tools/load_envs.sh ./build/moderation-service
 
 
