@@ -40,10 +40,9 @@
 # debug information files
 *.dwo
 
-.env
-.log
-
-.proto
+*.env
+*.log
+.vscode/
 
 # CMake build folder
 /build/

@@ -23,6 +23,5 @@ class Server {
         std::string server_address_;
         std::string server_name_;
 
-        // interceptors (middlewares in grpc)
         std::vector<std::unique_ptr<grpc::experimental::ServerInterceptorFactoryInterface>> interceptor_creators_;
 };

@@ -2,7 +2,6 @@ MKDIR := 'mkdir -p'
 RM := 'rm -rf ' + TMP_DIR
 DOWN := 'curl -fsSL'
 DOWN_OUT := '-o'
-ENV := env_var_or_default("ENV", "dev")
 
 clean:
     {{RM}}
@@ -27,6 +26,6 @@ build:
     cd build && cmake .. && cmake --build .
 
 run: build
-    ENV={{ENV}} tools/load_envs.sh ./build/moderation-service
+    ENV=dev tools/load_envs.sh ./build/moderation-service
 
 
