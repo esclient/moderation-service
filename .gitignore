@@ -40,5 +40,15 @@
 # debug information files
 *.dwo
 
-.env
-.log
+*.env
+*.log
+.vscode/
+
+# CMake build folder
+/build/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.log
