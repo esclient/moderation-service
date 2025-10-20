@@ -24,3 +24,4 @@ fetch-tools:
     {{ MKDIR_TOOLS }}
     {{ FETCH_COMMON_JUST }}
     {{ FETCH_LOAD_ENVS }}
+    

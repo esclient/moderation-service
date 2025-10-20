@@ -16,58 +16,64 @@ struct Config {
     static Config New() {
         Config config;
         
-        const char* host_env = std::getenv("HOST");
-        if(host_env == nullptr)
+        const char* host = std::getenv("HOST");
+        if(host == nullptr)
         {
             throw std::runtime_error("HOST environment variable not set");
         }
-        else{
-        config.host = host_env;
+        else
+        {
+            config.host = host;
         }
 
-        const char* port_env = std::getenv("PORT");
-        if(port_env == nullptr)
+        const char* port = std::getenv("PORT");
+        if(port == nullptr)
         {
             throw std::runtime_error("PORT environment variable not set");
         }
-        else{
-        config.port = port_env;
+        else
+        {
+            config.port = port;
         }
 
-        const char* database_url_env = std::getenv("DATABASE_URL");
-        if(database_url_env == nullptr)
+        const char* database_url = std::getenv("DATABASE_URL");
+        if(database_url == nullptr)
         {
             throw std::runtime_error("DATABASE_URL environment variable not set");
         }
-        else{
-            config.database_url = database_url_env;
+        else
+        {
+            config.database_url = database_url;
         }
 
-        const char* log_level_env = std::getenv("LOG_LEVEL");
-        if(log_level_env == nullptr)
+        const char* log_level = std::getenv("LOG_LEVEL");
+        if(log_level == nullptr)
         {
             throw std::runtime_error("LOG_LEVEL environment variable not set");
         }
-        else{
-            config.log_level = log_level_env;
+        else
+        {
+            config.log_level = log_level;
         }
 
-        const char* log_format_env = std::getenv("LOG_FORMAT");
-        if(log_format_env == nullptr)
+        const char* log_format = std::getenv("LOG_FORMAT");
+        if(log_format == nullptr)
         {
             throw std::runtime_error("LOG_FORMAT environment variable not set");
         }
-        else{
-            config.log_format = log_format_env;
+        else
+        {
+            config.log_format = log_format;
         }
 
-        const char* log_datefmt_env = std::getenv("LOG_DATEFMT");
-        if(log_datefmt_env == nullptr)
+        const char* log_datefmt = std::getenv("LOG_DATEFMT");
+        if(log_datefmt == nullptr)
         {
             throw std::runtime_error("LOG_DATEFMT environment variable not set");
         }
-        else{
-            config.log_datefmt = log_datefmt_env;
+        else
+        {
+            config.log_datefmt = log_datefmt;
         }
 
         return config;

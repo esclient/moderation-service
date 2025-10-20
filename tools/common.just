@@ -25,7 +25,15 @@ build:
     mkdir -p build
     cd build && cmake .. && cmake --build .
 
+rebuild:
+    rm -rf build
+    mkdir -p build
+    cd build && cmake .. && cmake --build .
+
+
 run: build
     ENV=dev tools/load_envs.sh ./build/moderation-service
 
+run-new: rebuild
+    ENV=dev tools/load_envs.sh ./build/moderation-service
 
