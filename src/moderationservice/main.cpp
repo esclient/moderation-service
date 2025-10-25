@@ -9,7 +9,7 @@ int main() {
       Config config = Config::New(); 
       std::shared_ptr<ModerationService> mService = std::make_shared<ModerationService>();
       std::unique_ptr<Server> server = std::make_unique<Server>(config.host + ":" + config.port, mService, "ModerationService");
-
+      
       server->Start();
   }
   catch (const std::exception &e)
