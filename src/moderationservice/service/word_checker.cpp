@@ -39,13 +39,13 @@ namespace WordChecker {
         return tokens;
     }
 
-    bool TrieBuildingAndWordChecking(const std::vector < std::string> &textN)
+    bool WordChecking(const std::vector < std::string> &textN)
     {
         tsl::htrie_set<char> words;
 
         unsigned int forbiddenWordCount = 0;
 
-        words.insert("Gay");
+        words.insert("gay");
         words.insert("еблан");
         words.insert("шутка");
 

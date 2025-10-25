@@ -37,6 +37,7 @@ add_executable(${PROJECT_NAME}
     src/moderationservice/service/text_normalization.cpp
     src/moderationservice/service/leetspeak_normalization.cpp
     src/moderationservice/service/word_checker.cpp
+    src/moderationservice/service/text_processor.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
