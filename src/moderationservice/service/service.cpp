@@ -18,24 +18,23 @@ Status ModerationService::ModerateObject(grpc::ServerContext* context, const mod
 {
     std::lock_guard<std::mutex> Lock(this->mutex_);
 
-    int64_t id = request->id();
-    bool testingWordModeration = TextProcessor::TextProcessing(request->text());
-    
-    if(this->moderations_.find(id) == this->moderations_.end()) {
-        return Status(grpc::StatusCode::NOT_FOUND, "Not found");
+    try {
+        bool testingWordModeration = TextProcessor::TextProcessing(request->text());
+        if(!testingWordModeration)
+        {
+            response->set_success(false);
+            std::cout << "Moderation check passed for ID: " << id << std::endl;
+        }
+        else{
+            response->set_success(true);
+            std::cout << "Text flagged for moderation: " << request->text() << std::endl;
+            std::cout << "Moderation check failed for ID: " << id << std::endl;
+        }
+        return Status::OK;
     }
-
-    moderation::ModerateObjectRequest moderation = this->moderations_[id];
-    if(!testingWordModeration)
+    catch (const std::exception &e)
     {
-        response->set_success(false);
-        std::cout << "Moderation check passed for ID: " << id << std::endl;
-        return Status::OK;
-    }
-    else{
-        response->set_success(true);
-        std::cout << "Text flagged for moderation: " << request->text() << std::endl;
-        std::cout << "Moderation check failed for ID: " << id << std::endl;
-        return Status::OK;
+        std::cerr << "[Service] ERROR: " << e.what() << std::endl;
+        return Status(grpc::StatusCode::INTERNAL, e.what());
     }
 }
