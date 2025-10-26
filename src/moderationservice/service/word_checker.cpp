@@ -1,6 +1,10 @@
 #include "word_checker.hpp"
+#include "constants.hpp"
 
 namespace WordChecker {
+
+    const auto& forbiddenWords = TextProcessingConstants::HashTrieMaps::forbiddenWords;
+
     std::vector<std::string> Tokenize(const std::string& textN)
     {
         std::vector<std::string> tokens;
@@ -38,20 +42,14 @@ namespace WordChecker {
 
         return tokens;
     }
-
     bool WordChecking(const std::vector < std::string> &textN)
     {
-        tsl::htrie_set<char> words;
 
         unsigned int forbiddenWordCount = 0;
 
-        words.insert("gay");
-        words.insert("еблан");
-        words.insert("шутка");
-
         for (int i = 0; i < textN.size(); i++)
         {
-            if (words.find(textN[i]) != words.end())
+            if (forbiddenWords.find(textN[i]) != forbiddenWords.end())
             {
                 forbiddenWordCount++;
             }

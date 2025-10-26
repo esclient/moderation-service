@@ -1,17 +1,9 @@
 #include "service.hpp"
 #include "text_processor.hpp"
+#include "constants.hpp"
 
 ModerationService::ModerationService() {
-    // Initialize mock data
-    moderation::ModerateObjectRequest mod1;
-    mod1.set_id(1);
-    mod1.set_text("Very b@d w0rd! Please m0d3rate. This is a t3st. You are gay. Super gay! Super super gay!");
-
-    moderation::ModerateObjectResponse mod2;
-    mod2.set_success(true);
-
-    moderations_[mod1.id()] = mod1;
-
+    TextProcessingConstants::HashTrieMaps::InitializeForbiddenWords();
 }
 
 Status ModerationService::ModerateObject(grpc::ServerContext* context, const moderation::ModerateObjectRequest* request, moderation::ModerateObjectResponse* response)
@@ -23,12 +15,12 @@ Status ModerationService::ModerateObject(grpc::ServerContext* context, const mod
         if(!testingWordModeration)
         {
             response->set_success(false);
-            std::cout << "Moderation check passed for ID: " << id << std::endl;
+            std::cout << "Moderation check passed for ID: " << request->id() << std::endl;
         }
         else{
             response->set_success(true);
             std::cout << "Text flagged for moderation: " << request->text() << std::endl;
-            std::cout << "Moderation check failed for ID: " << id << std::endl;
+            std::cout << "Moderation check failed for ID: " << request->id() << std::endl;
         }
         return Status::OK;
     }

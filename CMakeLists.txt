@@ -38,6 +38,7 @@ add_executable(${PROJECT_NAME}
     src/moderationservice/service/leetspeak_normalization.cpp
     src/moderationservice/service/word_checker.cpp
     src/moderationservice/service/text_processor.cpp
+    src/moderationservice/model/constants.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -53,5 +54,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC 
         ${PROJECT_SOURCE_DIR}/include
     PRIVATE
+        ${PROJECT_SOURCE_DIR}/src/moderationservice/service 
+        ${PROJECT_SOURCE_DIR}/src/moderationservice/model
         ${PROJECT_SOURCE_DIR}/external/tsl-hat-trie/include
 )
