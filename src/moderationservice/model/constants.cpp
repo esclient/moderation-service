@@ -1,6 +1,5 @@
 #include "constants.hpp"
 
-
 namespace TextProcessingConstants
 {
     namespace LeetspeakMaps {
@@ -59,6 +58,4 @@ namespace TextProcessingConstants
             forbiddenWords.insert("шутка");
         }
     }
-
-
 } //namespace TextProcessingConstants
