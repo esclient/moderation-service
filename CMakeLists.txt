@@ -59,8 +59,6 @@ target_link_libraries(${GENPROTO_LIB}
     PUBLIC
         grpc++
         protobuf::libprotobuf
-        #utf8_range::utf8_range
-        #utf8_range::utf8_validity
 )
 
 target_include_directories(${GENPROTO_LIB}
@@ -84,8 +82,11 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${GENPROTO_LIB}
         grpc++_reflection
-        uc 
-        i18n
+        icuuc
+        icui18n  
+        icudata
+        icuio
+        icutu
         tsl::hat_trie
 )
 
