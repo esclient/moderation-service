@@ -23,7 +23,7 @@ include(${CPM_DOWNLOAD_LOCATION})
 CPMAddPackage(
   NAME gRPC
   GITHUB_REPOSITORY grpc/grpc
-  GIT_TAG v1.51.1
+  GIT_TAG v1.76.0
   OPTIONS
     "gRPC_BUILD_TESTS OFF"
     "gRPC_BUILD_CODEGEN ON"
@@ -33,7 +33,7 @@ CPMAddPackage(
 CPMAddPackage(
   NAME ICU
   GITHUB_REPOSITORY unicode-org/icu
-  GIT_TAG release-74-2 
+  GIT_TAG release-74-2
   SOURCE_SUBDIR icu4c/source
   OPTIONS
     "ICU_BUILD_TESTS OFF"
