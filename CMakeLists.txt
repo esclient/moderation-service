@@ -1,5 +1,21 @@
 cmake_minimum_required(VERSION 3.20)
 project(moderation-service)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
+set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
+
+include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
+
+if(WIN32)
+    add_definitions(-D_WIN32_WINNT=0x0A00)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
+find_package(gRPC CONFIG REQUIRED PATHS ${CMAKE_BINARY_DIR})
+find_package(ICU REQUIRED COMPONENTS uc i18n data)
+find_package(Threads REQUIRED)
 
 set(CPM_DOWNLOAD_VERSION 0.40.2)
 if(CPM_SOURCE_CACHE)
@@ -21,25 +37,6 @@ endif()
 include(${CPM_DOWNLOAD_LOCATION})
 
 CPMAddPackage(
-  NAME gRPC
-  GITHUB_REPOSITORY grpc/grpc
-  GIT_TAG v1.51.1
-  OPTIONS
-    "gRPC_BUILD_TESTS OFF"
-    "gRPC_BUILD_CODEGEN ON"
-    "gRPC_BUILD_CSHARP_EXT OFF"
-)
-
-CPMAddPackage(
-  NAME ICU
-  GITHUB_REPOSITORY unicode-org/icu
-  GIT_TAG release-74-2 
-  SOURCE_SUBDIR icu4c/source
-  OPTIONS
-    "ICU_BUILD_TESTS OFF"
-)
-
-CPMAddPackage(
   NAME tsl-hat-trie
   GITHUB_REPOSITORY Tessil/hat-trie
   VERSION 0.6.0  
@@ -49,21 +46,16 @@ CPMAddPackage(
 set(GENPROTO_LIB "genproto_lib")
 set(GENPROTO_DIR "${PROJECT_SOURCE_DIR}/src/moderationservice/grpc")
 
-# loop through genproto dir
-file(GLOB_RECURSE PROTO_SRC "${GENPROTO_DIR}/*.pb.cc")
-file(GLOB_RECURSE PROTO_HDR "${GENPROTO_DIR}/*.pb.h")
-
-add_library(${GENPROTO_LIB} ${PROTO_SRC} ${PROTO_HDR})
+# Explicitly list proto files
+add_library(${GENPROTO_LIB}
+    ${GENPROTO_DIR}/moderation.pb.cc
+    ${GENPROTO_DIR}/moderation.grpc.pb.cc
+)
 
 target_link_libraries(${GENPROTO_LIB}
     PUBLIC
-        grpc++
+        gRPC::grpc++
         protobuf::libprotobuf
-)
-
-target_include_directories(${GENPROTO_LIB}
-    PUBLIC
-        ${GENPROTO_DIR}
 )
 
 #link source files
@@ -81,13 +73,12 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${GENPROTO_LIB}
-        grpc++_reflection
-        icuuc
-        icui18n  
-        icudata
-        icuio
-        icutu
+        gRPC::grpc++_reflection
+        ICU::uc
+        ICU::i18n  
+        ICU::data
         tsl::hat_trie
+        Threads::Threads
 )
 
 #link header files
@@ -97,4 +88,5 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${PROJECT_SOURCE_DIR}/src/moderationservice/service 
         ${PROJECT_SOURCE_DIR}/src/moderationservice/model
+        ${GENPROTO_DIR}
 )

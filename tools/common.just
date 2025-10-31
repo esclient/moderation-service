@@ -22,26 +22,12 @@ gen-stubs: fetch-proto
 update: gen-stubs clean
 
 build:
-    @cmake -S . -B build -DCMAKE_BUILD_TYPE=Release 2>/dev/null || true
-    @cmake --build build -j$(nproc)
-    
-rebuild:
-    #!/usr/bin/env bash
-    if [ -d "build" ]; then
-        chmod -R u+w build 2>/dev/null || true
-        rm -rf build
-    fi
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-    cmake --build build -j$(nproc)
-
-reconfigure:
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-    cmake --build build -j$(nproc) --clean-first
+    conan install . --output-folder=build --build=missing
+    cmake -S . -B build \
+        -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+        -DCMAKE_BUILD_TYPE=Release
+    cmake --build build
 
 run: build
-    ENV=dev tools/load_envs.sh ./build/moderation-service
-
-dev: 
-    @cmake --build build -j$(nproc)
     ENV=dev tools/load_envs.sh ./build/moderation-service
 
