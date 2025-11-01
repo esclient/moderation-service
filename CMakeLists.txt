@@ -1,20 +1,27 @@
 cmake_minimum_required(VERSION 3.20)
 project(moderation-service)
 set(CMAKE_CXX_STANDARD 17)
+
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
 set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
 
-include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
-
 if(WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    add_compile_definitions(U_STATIC_IMPLEMENTATION)
 endif()
+
+include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
 
 find_package(Protobuf REQUIRED CONFIG)
 find_package(gRPC REQUIRED CONFIG)
+find_package(absl REQUIRED CONFIG)
 find_package(ICU REQUIRED COMPONENTS uc i18n data)
 find_package(Threads REQUIRED)
 
@@ -90,14 +97,17 @@ add_library(${GENPROTO_LIB}
 target_include_directories(${GENPROTO_LIB}
     PUBLIC
         ${GENPROTO_DIR}
-        $<TARGET_PROPERTY:protobuf::libprotobuf,INTERFACE_INCLUDE_DIRECTORIES>
-        $<TARGET_PROPERTY:gRPC::grpc++,INTERFACE_INCLUDE_DIRECTORIES>
+        ${protobuf_INCLUDE_DIRS_RELEASE}
+        ${abseil_INCLUDE_DIRS_RELEASE}
+        ${grpc_INCLUDE_DIRS_RELEASE}
+        ${icu_INCLUDE_DIRS_RELEASE}
 )
 
 target_link_libraries(${GENPROTO_LIB}
     PUBLIC
         protobuf::libprotobuf
         gRPC::grpc++
+        gRPC::grpc
 )
 
 #link source files
@@ -115,6 +125,9 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${GENPROTO_LIB}
+        gRPC::grpc++
+        gRPC::grpc 
+        protobuf::libprotobuf
         gRPC::grpc++_reflection
         ICU::uc
         ICU::i18n  
@@ -122,6 +135,10 @@ target_link_libraries(${PROJECT_NAME}
         tsl::hat_trie
         Threads::Threads
 )
+
+if(WIN32)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE U_STATIC_IMPLEMENTATION)
+endif()
 
 #link header files
 target_include_directories(${PROJECT_NAME} 
