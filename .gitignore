@@ -67,3 +67,5 @@ CMakeUserPresets.json
 
 external/
 external/tsl-hat-trie/
+
+.proto

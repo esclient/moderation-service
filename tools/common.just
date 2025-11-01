@@ -19,4 +19,3 @@ build: fetch-proto
 
 run: build
     ENV=dev tools/load_envs.sh ./build/moderation-service
-
