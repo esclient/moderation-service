@@ -13,7 +13,8 @@ if(WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
-find_package(gRPC CONFIG REQUIRED PATHS ${CMAKE_BINARY_DIR})
+find_package(Protobuf REQUIRED CONFIG)
+find_package(gRPC REQUIRED CONFIG)
 find_package(ICU REQUIRED COMPONENTS uc i18n data)
 find_package(Threads REQUIRED)
 
@@ -42,20 +43,59 @@ CPMAddPackage(
   VERSION 0.6.0  
 )
 
-# set necessary variables for genproto lib target
+# Set necessary variables for genproto lib target
 set(GENPROTO_LIB "genproto_lib")
-set(GENPROTO_DIR "${PROJECT_SOURCE_DIR}/src/moderationservice/grpc")
+set(GENPROTO_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated/grpc")
+set(PROTO_FILE "${CMAKE_CURRENT_SOURCE_DIR}/.proto/moderation.proto")
 
-# Explicitly list proto files
+# Create output directory for generated files
+file(MAKE_DIRECTORY ${GENPROTO_DIR})
+
+# Define generated file paths
+set(PROTO_SRCS "${GENPROTO_DIR}/moderation.pb.cc")
+set(PROTO_HDRS "${GENPROTO_DIR}/moderation.pb.h")
+set(GRPC_SRCS "${GENPROTO_DIR}/moderation.grpc.pb.cc")
+set(GRPC_HDRS "${GENPROTO_DIR}/moderation.grpc.pb.h")
+
+add_custom_command(
+    OUTPUT ${PROTO_SRCS} ${PROTO_HDRS}
+    COMMAND $<TARGET_FILE:protobuf::protoc>
+    ARGS --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/.proto
+         --cpp_out=${GENPROTO_DIR}
+         ${PROTO_FILE}
+    DEPENDS ${PROTO_FILE}
+    COMMENT "Generating protobuf files"
+)
+
+# Generate gRPC files using custom command
+add_custom_command(
+    OUTPUT ${GRPC_SRCS} ${GRPC_HDRS}
+    COMMAND $<TARGET_FILE:protobuf::protoc>
+    ARGS --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/.proto
+         --grpc_out=${GENPROTO_DIR}
+         --plugin=protoc-gen-grpc=$<TARGET_FILE:gRPC::grpc_cpp_plugin>
+         ${PROTO_FILE}
+    DEPENDS ${PROTO_FILE} ${PROTO_HDRS}
+    COMMENT "Generating gRPC files"
+)
+
+# Create library from generated sources
 add_library(${GENPROTO_LIB}
-    ${GENPROTO_DIR}/moderation.pb.cc
-    ${GENPROTO_DIR}/moderation.grpc.pb.cc
+    ${PROTO_SRCS}
+    ${PROTO_HDRS}
+    ${GRPC_SRCS}
+    ${GRPC_HDRS}
+)
+
+target_include_directories(${GENPROTO_LIB}
+    PUBLIC
+        ${GENPROTO_DIR}
 )
 
 target_link_libraries(${GENPROTO_LIB}
     PUBLIC
-        gRPC::grpc++
         protobuf::libprotobuf
+        gRPC::grpc++
 )
 
 #link source files

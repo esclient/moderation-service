@@ -1,6 +1,6 @@
 [requires]
     grpc/1.72.0
-    protobuf/6.32.1
+    protobuf/5.27.0
     icu/77.1
 
 [generators]
