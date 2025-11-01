@@ -1,0 +1,20 @@
+[requires]
+    grpc/1.72.0
+    protobuf/5.27.0
+    icu/77.1
+
+[generators]
+    CMakeDeps
+    CMakeToolchain
+
+[options]
+    grpc/*:codegen=True
+    grpc/*:cpp_plugin=True
+    grpc/*:csharp_ext=False
+    grpc/*:csharp_plugin=False
+    grpc/*:node_plugin=False
+    grpc/*:objective_c_plugin=False
+    grpc/*:php_plugin=False
+    grpc/*:python_plugin=False
+    grpc/*:ruby_plugin=False
+    grpc/*:shared=False

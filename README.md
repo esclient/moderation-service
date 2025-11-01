@@ -5,3 +5,15 @@
 
 
 <img width="5573" height="6341" alt="Unbenannt-2025-10-16-0020(1)" src="https://github.com/user-attachments/assets/d9891188-500e-43e7-a8a3-6d11cbbd1d0e" />
+
+
+
+To build and run you need the following installed: 
+
+-CMake
+-Just
+-Conan
+-C++ compiler (gcc/clang/MSVC) (gcc recommended)
+-curl
+-sh/bash (Windows only)
+-Internet connection

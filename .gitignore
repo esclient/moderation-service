@@ -41,14 +41,31 @@
 *.dwo
 
 *.env
-*.log
+
+# IDE
 .vscode/
+.idea/
+*.swp
+*.swo
 
 # CMake build folder
 /build/
 *.o
 *.obj
-*.exe
 *.dll
 *.so
 *.log
+build/
+cmake-build-*/
+
+# Conan
+.conan2/
+conan.lock
+
+# CMake user presets
+CMakeUserPresets.json
+
+external/
+external/tsl-hat-trie/
+
+.proto
