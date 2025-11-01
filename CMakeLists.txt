@@ -90,6 +90,8 @@ add_library(${GENPROTO_LIB}
 target_include_directories(${GENPROTO_LIB}
     PUBLIC
         ${GENPROTO_DIR}
+        $<TARGET_PROPERTY:protobuf::libprotobuf,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:gRPC::grpc++,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(${GENPROTO_LIB}
