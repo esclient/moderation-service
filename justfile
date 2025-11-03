@@ -7,7 +7,6 @@ LOAD_ENVS_URL := 'https://raw.githubusercontent.com/esclient/tools/refs/heads/ma
 PROTO_TAG := 'v0.1.3'
 PROTO_NAME := 'moderation.proto'
 TMP_DIR := '.proto'
-OUT_DIR := 'src/moderationservice/grpc'
 SERVICE_NAME := 'moderation'
 
 MKDIR_TOOLS := 'mkdir -p tools'

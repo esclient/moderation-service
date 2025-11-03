@@ -21,7 +21,6 @@ include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
 
 find_package(Protobuf REQUIRED CONFIG)
 find_package(gRPC REQUIRED CONFIG)
-find_package(absl REQUIRED CONFIG)
 find_package(ICU REQUIRED COMPONENTS uc i18n data)
 find_package(Threads REQUIRED)
 
@@ -64,6 +63,7 @@ set(PROTO_HDRS "${GENPROTO_DIR}/moderation.pb.h")
 set(GRPC_SRCS "${GENPROTO_DIR}/moderation.grpc.pb.cc")
 set(GRPC_HDRS "${GENPROTO_DIR}/moderation.grpc.pb.h")
 
+# Generate protobuf files using custom command
 add_custom_command(
     OUTPUT ${PROTO_SRCS} ${PROTO_HDRS}
     COMMAND $<TARGET_FILE:protobuf::protoc>
@@ -107,7 +107,6 @@ target_link_libraries(${GENPROTO_LIB}
     PUBLIC
         protobuf::libprotobuf
         gRPC::grpc++
-        gRPC::grpc
 )
 
 #link source files
@@ -126,7 +125,6 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${GENPROTO_LIB}
         gRPC::grpc++
-        gRPC::grpc 
         protobuf::libprotobuf
         gRPC::grpc++_reflection
         ICU::uc
