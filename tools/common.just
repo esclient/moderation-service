@@ -27,4 +27,4 @@ run-l: build-linux
     ENV=dev tools/load_envs.sh ./build/moderation-service
 
 run-w: build-windows
-    wsl ENV=dev tools/load_envs.sh ./build/moderation-service
+    ENV=dev tools/load_envs.sh ./build/Release/moderation-service.exe
