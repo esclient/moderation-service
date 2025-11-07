@@ -22,6 +22,7 @@ include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
 find_package(Protobuf REQUIRED CONFIG)
 find_package(gRPC REQUIRED CONFIG)
 find_package(ICU REQUIRED COMPONENTS uc i18n data)
+find_package(RdKafka REQUIRED)
 find_package(Threads REQUIRED)
 
 set(CPM_DOWNLOAD_VERSION 0.40.2)
@@ -98,7 +99,6 @@ target_include_directories(${GENPROTO_LIB}
     PUBLIC
         ${GENPROTO_DIR}
         ${protobuf_INCLUDE_DIRS_RELEASE}
-        ${abseil_INCLUDE_DIRS_RELEASE}
         ${grpc_INCLUDE_DIRS_RELEASE}
         ${icu_INCLUDE_DIRS_RELEASE}
 )
@@ -125,13 +125,15 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${GENPROTO_LIB}
         gRPC::grpc++
-        protobuf::libprotobuf
         gRPC::grpc++_reflection
+        protobuf::libprotobuf
         ICU::uc
         ICU::i18n  
         ICU::data
         tsl::hat_trie
         Threads::Threads
+        RdKafka::rdkafka
+        RdKafka::rdkafka++
 )
 
 if(WIN32)

@@ -1,6 +1,7 @@
 DATABASE_URL: "postgresql://esclient_devcomm:oBFG3H!7XYSJCSNK@pg4.sweb.ru:5433/esclient_devcomm"
 HOST: "0.0.0.0"
 PORT: "7006"
+KAFKA_BROKERS: "localhost:9092"
 
 LOG_LEVEL: "INFO"
 LOG_FORMAT: "%(asctime)s %(levelname)-8s [%(name)s] %(message)s"

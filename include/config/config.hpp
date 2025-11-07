@@ -8,6 +8,7 @@
 struct Config {
     std::string host;
     std::string port;
+    std::string kafka_brokers;
     std::string database_url;
     std::string log_level;
     std::string log_format;
@@ -24,6 +25,16 @@ struct Config {
         else
         {
             config.host = host;
+        }
+
+        const char* kafka_brokers = std::getenv("KAFKA_BROKERS");
+        if(kafka_brokers == nullptr)
+        {
+            throw std::runtime_error("KAFKA_BROKERS environment variable not set");
+        }
+        else
+        {
+            config.kafka_brokers = kafka_brokers;
         }
 
         const char* port = std::getenv("PORT");

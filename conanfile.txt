@@ -2,6 +2,7 @@
     grpc/1.72.0
     protobuf/5.27.0
     icu/77.1
+    librdkafka/2.12.1
 
 [generators]
     CMakeDeps
@@ -18,3 +19,6 @@
     grpc/*:python_plugin=False
     grpc/*:ruby_plugin=False
     grpc/*:shared=False
+    librdkafka/*:shared=False
+    librdkafka/*:ssl=True
+    librdkafka/*:sasl=True
