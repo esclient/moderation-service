@@ -119,6 +119,7 @@ add_executable(${PROJECT_NAME}
     src/moderationservice/service/word_checker.cpp
     src/moderationservice/service/text_processor.cpp
     src/moderationservice/model/constants.cpp
+    src/moderationservice/kafka/kafkaclient.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -147,5 +148,6 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${PROJECT_SOURCE_DIR}/src/moderationservice/service 
         ${PROJECT_SOURCE_DIR}/src/moderationservice/model
+        ${PROJECT_SOURCE_DIR}/src/moderationservice/kafka
         ${GENPROTO_DIR}
 )
