@@ -32,12 +32,12 @@ class KafkaClient {
         ~KafkaClient();
 
         void Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t)> result_callback);
-        bool ProduceRequest(const moderation::ModerateObjectRequest& request);
-        bool ProduceRequestAsync(const moderation::ModerateObjectRequest& request);
+        bool SendRequestAsync(const moderation::ModerateObjectRequest& request);
         void StartConsumer();
         void StopConsumer();
         void Flush();
-        bool isHealthy() const;
+        bool isHealthy();
+        void Shutdown();
 
     private:
         KafkaConfig config_;
@@ -59,7 +59,7 @@ class KafkaProducer {
     private:
         KafkaConfig config_;
         std::unique_ptr<RdKafka::Producer> producer_;
-        std::unique_ptr<RdKafka::Topic> topic_;
+        std::string topic_name_;
         std::unique_ptr<ProducerDeliveryReportCb> dr_cb_;
         std::mutex mutex_;
 };
@@ -68,7 +68,7 @@ class KafkaConsumer {
     public:
         using MessageCallback = std::function<void(const moderation::ModerateObjectResponse&, int64_t)>;
 
-        explicit KafkaConsumer(const KafkaConfig& config);
+        explicit KafkaConsumer(const KafkaConfig& config, MessageCallback callback);
         ~KafkaConsumer();
 
         void Start();
@@ -79,7 +79,7 @@ class KafkaConsumer {
         void ConsumeLoop();
         void ProcessMessage(RdKafka::Message* message);
 
-        KfakaConfig config_;
+        KafkaConfig config_;
         MessageCallback callback_;
         std::unique_ptr<RdKafka::KafkaConsumer> consumer_;
         std::unique_ptr<ConsumerEventCb> event_cb_;

@@ -22,29 +22,26 @@ void KafkaClient::Initialize(std::function<void(const moderation::ModerateObject
     }
 }
 
-bool KafkaClient::SendRequest(const moderation::ModerateObjectRequest& request)
+bool KafkaClient::SendRequestAsync(const moderation::ModerateObjectRequest& request)
 {
     if(!initialized_ || !producer_)
     {
         std::cerr << "KafkaClient not initialized." << std::endl;
         return false;
     }
-    return producer_->SendRequest(request);
+    return producer_->SendRequestAsync(request);
 }
 
-class ProducerDeliveryReportCb : public RdKafka::DeliveryReportCb {
-    public:
-        void dr_cb(RdKafka::Message &message) override {
-            if(message.err() == RdKafka::ERR_NO_ERROR) {
-                std::cout << "Message delivered to topic " << message.topic_name()
-                << ", partition " << message.partition() 
-                << ", offset " << message.offset() << std::endl;
-            }
-            else {
-                std::cerr << "Message delivery failed: " << message.errstr() << std::endl;
-            }
-        }
-};
+void ProducerDeliveryReportCb::dr_cb(RdKafka::Message &message) {
+    if(message.err() == RdKafka::ERR_NO_ERROR) {
+        std::cout << "Message delivered to topic " << message.topic_name()
+        << ", partition " << message.partition() 
+        << ", offset " << message.offset() << std::endl;
+    }
+    else {
+        std::cerr << "Message delivery failed: " << message.errstr() << std::endl;
+    }
+}
 
 KafkaProducer::KafkaProducer(const KafkaConfig& config) {
     std::string errorString;
@@ -64,37 +61,26 @@ KafkaProducer::KafkaProducer(const KafkaConfig& config) {
     conf->set("retry.backoff.ms", std::to_string(config.retry_backoff_ms), errorString);
     conf->set("dr_cb", dr_cb_.get(), errorString);
 
-    RdKafka::Producer* producer = RdKafka::Producer::create(conf, errorString);
-    
-    if(!producer)
+    producer_.reset(RdKafka::Producer::create(conf, errorString));
+    if(!producer_)
     {
         delete conf;
         throw std::runtime_error("Failed to create Kafka producer: " + errorString);
     }
-    
-    producer_ = producer;
+
     delete conf;
 
-    RdKafka::TopicConf* topicConf = RdKafka::TopicConf::create(RdKafka::TopicConf::CONF_TOPIC);
-
-    RdKafka::Topic* topic = RdKafka::Topic::create(
-        producer,
-        config.request_topic,
-        topicConf,
-        errorString
-    );
-    if(!topic)
-    {
-        delete topicConf;
-        throw std::runtime_error("Failed to create Kafka topic: " + errorString);
-    }
-
-    topic_ = topic;
-    delete topicConf;
+   topic_name_ = config.request_topic;
 }
 
 bool KafkaProducer::SendRequestAsync(const moderation::ModerateObjectRequest& request) {
-    
+    std::lock_guard<std::mutex> lock(mutex_);
+    if(!producer_ || topic_name_.empty())
+    {
+        std::cerr << "KafkaProducer not properly initialized." << std::endl;
+        return false;
+    }
+
     std::string serializedRequest;
     if(!request.SerializeToString(&serializedRequest))
     {
@@ -105,12 +91,12 @@ bool KafkaProducer::SendRequestAsync(const moderation::ModerateObjectRequest& re
     std::string key = std::to_string(request.id());
 
     RdKafka::ErrorCode error = producer_->produce(
-        topic_.get(),
+        topic_name_,
         RdKafka::Topic::PARTITION_UA,
         RdKafka::Producer::RK_MSG_COPY,
         const_cast<char*>(serializedRequest.c_str()),
         serializedRequest.size(),
-        &key[0],
+        key.c_str(),
         key.size(),
         0,
         nullptr
@@ -130,6 +116,12 @@ bool KafkaProducer::SendRequestAsync(const moderation::ModerateObjectRequest& re
 bool KafkaProducer::Flush(int timeoutMs) {
     RdKafka::ErrorCode error = producer_->flush(timeoutMs);
 
+    if(!producer_)
+    {
+        std::cerr << "KafkaProducer not properly initialized." << std::endl;
+        return false;
+    }
+
     if(error != RdKafka::ERR_NO_ERROR)
     {
         std::cerr << "Failed to flush Kafka producer: " << RdKafka::err2str(error) << std::endl;
@@ -146,36 +138,34 @@ KafkaProducer::~KafkaProducer() {
     }
 }
 
-class ConsumerEventCb : public RdKafka::EventCb {
-    public:
-        void event_cb(RdKafka::Event &event) override {
-            switch(event.type()) {
-                case RdKafka::Event::EVENT_ERROR:
-                    if(event.fatal()) {
-                        std::cerr << "Fatal Kafka error: " << event.str() << std::endl;
-                        // Fatal errors mean consumer must be recreated
-                    }
-                    else {
-                        std::cerr << "Kafka error: " << event.str() << std::endl;
-                        // Non-fatal errors can be recovered
-                    }
-                    break;
-                case RdKafka::Event::EVENT_LOG:
-                    std::cout << "Kafka log: " << event.str() << std::endl;
-                    break;
-                default:
-                    break;
+void ConsumerEventCb::event_cb(RdKafka::Event &event) {
+    switch(event.type()) {
+        case RdKafka::Event::EVENT_ERROR:
+            if(event.fatal()) {
+                std::cerr << "Fatal Kafka error: " << event.str() << std::endl;
+                // Fatal errors mean consumer must be recreated
             }
-        }
-};
+            else {
+                std::cerr << "Kafka error: " << event.str() << std::endl;
+                // Non-fatal errors can be recovered
+            }
+            break;
+        case RdKafka::Event::EVENT_LOG:
+            std::cout << "Kafka log: " << event.str() << std::endl;
+            break;
+        default:
+            break;
+    }
+}
 
 void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
 {
     int64_t request_id = 0;
     if(message->key() && message->key_len() > 0)
     {
+        const std::string* key_ptr = static_cast<const std::string*>(message->key());
         std::string key_str(
-            static_cast<const char*>(message->key()),
+            *key_ptr,
             message->key_len()
         );
         try {
@@ -207,10 +197,10 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
     
 }
 
-KafkaConsumer::KafkaConsumer(const KafkaConfig& config, MessageCallback callback) {
+KafkaConsumer::KafkaConsumer(const KafkaConfig& config, MessageCallback callback) : config_(config), callback_(callback), running_(false) {
     std::string errorString;
     RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-    ConsumerEventCb* eventCallback = new ConsumerEventCb();
+    event_cb_ = std::make_unique<ConsumerEventCb>();
 
     conf->set("bootstrap.servers", config.brokers, errorString);
     conf->set("group.id", config.consumer_group_id, errorString);
@@ -218,9 +208,9 @@ KafkaConsumer::KafkaConsumer(const KafkaConfig& config, MessageCallback callback
     conf->set("enable.auto.commit", "true", errorString);
     conf->set("auto.commit.interval.ms", "1000", errorString);
     conf->set("session.timeout.ms", "30000", errorString);
-    conf->set("event_cb", eventCallback, errorString);
+    conf->set("event_cb", event_cb_.get(), errorString);
 
-    consumer_ = RdKafka::KafkaConsumer::create(conf, errorString);
+    consumer_.reset(RdKafka::KafkaConsumer::create(conf, errorString));
     if(!consumer_)
     {
         delete conf;
@@ -338,6 +328,29 @@ void KafkaClient::Shutdown()
 
     initialized_ = false;
     std::cout << "KafkaClient shutdown completed." << std::endl;
+}
+
+void KafkaClient::Flush()
+{
+    if(!initialized_ || !producer_)
+    {
+        std::cerr << "KafkaClient not initialized." << std::endl;
+        return;
+    }
+    producer_->Flush(10000);
+}
+
+bool KafkaClient::isHealthy() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if(!initialized_)
+    {
+        return false;
+    }
+
+    bool producerHealthy = producer_ ? producer_->isHealthy() : false;
+    bool consumerHealthy = consumer_ ? consumer_->isRunning() : false;
+
+    return producerHealthy && consumerHealthy;
 }
 
 KafkaClient::~KafkaClient() {
