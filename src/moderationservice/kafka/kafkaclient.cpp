@@ -1,4 +1,6 @@
 #include "kafkaclient.hpp"
+#include "text_processor.hpp"
+#include "constants.hpp"
 
 KafkaClient::KafkaClient(const KafkaConfig& config) : config_(config), initialized_(false) {
     
@@ -92,7 +94,7 @@ bool KafkaProducer::SendRequestAsync(const moderation::ModerateObjectRequest& re
 
     RdKafka::ErrorCode error = producer_->produce(
         topic_name_,
-        RdKafka::Topic::PARTITION_UA,
+        -1,
         RdKafka::Producer::RK_MSG_COPY,
         const_cast<char*>(serializedRequest.c_str()),
         serializedRequest.size(),
@@ -114,13 +116,14 @@ bool KafkaProducer::SendRequestAsync(const moderation::ModerateObjectRequest& re
 }
 
 bool KafkaProducer::Flush(int timeoutMs) {
-    RdKafka::ErrorCode error = producer_->flush(timeoutMs);
 
     if(!producer_)
     {
         std::cerr << "KafkaProducer not properly initialized." << std::endl;
         return false;
     }
+
+    RdKafka::ErrorCode error = producer_->flush(timeoutMs);
 
     if(error != RdKafka::ERR_NO_ERROR)
     {
@@ -163,11 +166,14 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
     int64_t request_id = 0;
     if(message->key() && message->key_len() > 0)
     {
-        const std::string* key_ptr = static_cast<const std::string*>(message->key());
+        const void* key_void = message->key();
+        const char* key_ptr = static_cast<const char*>(key_void);
+
         std::string key_str(
-            *key_ptr,
+            key_ptr,
             message->key_len()
         );
+
         try {
             request_id = std::stoll(key_str);
         }
@@ -180,15 +186,31 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
     const char* payload = static_cast<const char*>(message->payload());
     size_t payload_size = message->len();
 
-    moderation::ModerateObjectResponse response;
-    if(!response.ParseFromArray(payload, static_cast<int>(payload_size)))
+    moderation::ModerateObjectRequest request;
+    if(!request.ParseFromArray(payload, static_cast<int>(payload_size)))
     {
-        std::cerr << "Failed to parse ModerateObjectResponse from message payload" << std::endl;
+        std::cerr << "Failed to parse ModerateObjectRequest from message payload" << std::endl;
         return;
     }
     
-    std::cout << "Received ModerateObjectResponse for request ID " << request_id
-              << ", success: " << response.success() << std::endl;
+    std::cout << "Received ModerateObjectRequest for request ID " << request_id <<", text: " << request.text() << std::endl;
+
+    bool isFlagged = false;
+    
+    try{
+        isFlagged = TextProcessor::TextProcessing(request.text());
+    } catch(const std::exception& e)
+    {
+        std::cerr << "Error processing text: " << e.what() << std::endl;
+        return;
+    }
+
+    moderation::ModerateObjectResponse response;
+    response.set_success(isFlagged);
+
+    std::cout << "Text processing result for request ID " << request_id 
+              << ": " << (isFlagged ? "FLAGGED" : "PASSED") << std::endl;
+
 
     if (callback_)
     {
@@ -228,6 +250,8 @@ KafkaConsumer::KafkaConsumer(const KafkaConfig& config, MessageCallback callback
     }
 
     std::cout << "Kafka consumer subscribed to topic: " << config.result_topic << std::endl;
+
+    
     
     running_ = false;
 }
