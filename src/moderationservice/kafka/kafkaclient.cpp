@@ -224,6 +224,8 @@ KafkaConsumer::KafkaConsumer(const KafkaConfig& config, MessageCallback callback
     RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
     event_cb_ = std::make_unique<ConsumerEventCb>();
 
+    std::unique_ptr<ConsumerRebalanceCb> rebalance_cb_ = std::make_unique<ConsumerRebalanceCb>();
+
     conf->set("bootstrap.servers", config.brokers, errorString);
     conf->set("group.id", config.consumer_group_id, errorString);
     conf->set("auto.offset.reset", "earliest", errorString);
@@ -231,6 +233,11 @@ KafkaConsumer::KafkaConsumer(const KafkaConfig& config, MessageCallback callback
     conf->set("auto.commit.interval.ms", "1000", errorString);
     conf->set("session.timeout.ms", "30000", errorString);
     conf->set("event_cb", event_cb_.get(), errorString);
+    conf->set("heartbeat.interval.ms", "10000", errorString);
+    conf->set("max.poll.interval.ms", "300000", errorString);
+    conf->set("socket.timeout.ms", "60000", errorString);
+    conf->set("request.timeout.ms", "30000", errorString);
+    conf->set("rebalance_cb", rebalance_cb_.get(), errorString);
 
     consumer_.reset(RdKafka::KafkaConsumer::create(conf, errorString));
     if(!consumer_)

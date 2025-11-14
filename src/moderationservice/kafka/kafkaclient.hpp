@@ -25,6 +25,24 @@ class ConsumerEventCb : public RdKafka::EventCb {
         void event_cb(RdKafka::Event &event) override;
 };
 
+class ConsumerRebalanceCb : public RdKafka::RebalanceCb{
+    public:
+        void rebalance_cb(RdKafka::KafkaConsumer* consumer, RdKafka::ErrorCode err, 
+                        std::vector<RdKafka::TopicPartition*>& partitions) override {
+                            if(err == RdKafka::ERR__ASSIGN_PARTITIONS)
+                            {
+                                consumer->assign(partitions);
+                                std::cout << "Partitions assigned" << std::endl;
+                            } else if(err == RdKafka::ERR__REVOKE_PARTITIONS)
+                            {
+                                consumer->unassign();
+                                std::cout << "Partitions revoked" << std::endl;
+                            }
+                        }
+
+
+};
+
 class KafkaClient {
     
     public:
