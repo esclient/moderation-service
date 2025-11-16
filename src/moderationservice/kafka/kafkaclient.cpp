@@ -15,7 +15,7 @@ void KafkaClient::Initialize(std::function<void(const moderation::ModerateObject
 
     try{
         producer_ = std::make_unique<KafkaProducer>(config_);
-        consumer_ = std::make_unique<KafkaConsumer>(config_, result_callback);
+        consumer_ = std::make_unique<KafkaConsumer>(config_, result_callback, producer_.get());
         initialized_ = true;
         std::cout << "KafkaClient initialized successfully." << std::endl;
     } catch (const std::exception& e) {
@@ -31,7 +31,19 @@ bool KafkaClient::SendRequestAsync(const moderation::ModerateObjectRequest& requ
         std::cerr << "KafkaClient not initialized." << std::endl;
         return false;
     }
-    return producer_->SendRequestAsync(request);
+    return producer_->SendRequestAsync(request, config_.request_topic);
+}
+
+bool KafkaClient::SendResponseAsync(const moderation::ModerateObjectResponse& response, int64_t requestId)
+{
+    if(!initialized_ || !producer_)
+    {
+        std::cerr << "KafkaClient not initialized." << std::endl;
+        return false;
+    }
+
+    std::string key = std::to_string(requestId);
+    return producer_->SendResponseAsync(response, config_.result_topic, key);
 }
 
 void ProducerDeliveryReportCb::dr_cb(RdKafka::Message &message) {
@@ -62,6 +74,7 @@ KafkaProducer::KafkaProducer(const KafkaConfig& config) {
     conf->set("retries", std::to_string(config.max_retries), errorString);
     conf->set("retry.backoff.ms", std::to_string(config.retry_backoff_ms), errorString);
     conf->set("dr_cb", dr_cb_.get(), errorString);
+    conf->set("compression.codec", "none", errorString);
 
     producer_.reset(RdKafka::Producer::create(conf, errorString));
     if(!producer_)
@@ -75,11 +88,18 @@ KafkaProducer::KafkaProducer(const KafkaConfig& config) {
    topic_name_ = config.request_topic;
 }
 
-bool KafkaProducer::SendRequestAsync(const moderation::ModerateObjectRequest& request) {
+bool KafkaProducer::SendRequestAsync(const moderation::ModerateObjectRequest& request, const std::string& topic) {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!producer_ || topic_name_.empty())
     {
         std::cerr << "KafkaProducer not properly initialized." << std::endl;
+        return false;
+    }
+
+    std::string target_topic = topic.empty() ? topic_name_ : topic;
+    if(target_topic.empty())
+    {
+        std::cerr << "KafkaProducer: No topic specified." << std::endl;
         return false;
     }
 
@@ -93,7 +113,7 @@ bool KafkaProducer::SendRequestAsync(const moderation::ModerateObjectRequest& re
     std::string key = std::to_string(request.id());
 
     RdKafka::ErrorCode error = producer_->produce(
-        topic_name_,
+        target_topic,
         -1,
         RdKafka::Producer::RK_MSG_COPY,
         const_cast<char*>(serializedRequest.c_str()),
@@ -113,6 +133,53 @@ bool KafkaProducer::SendRequestAsync(const moderation::ModerateObjectRequest& re
     producer_->poll(0);
 
     return true;
+}
+
+bool KafkaProducer::SendResponseAsync(const moderation::ModerateObjectResponse& response, const std::string& topic, const std::string& key)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if(!producer_)
+    {
+        std::cerr << "KafkaProducer not properly initialized." << std::endl;
+        return false;
+    }
+
+    if(topic.empty())
+    {
+        std::cerr << "KafkaProducer: Topic cannot be empty for SendResponseAsync" << std::endl;
+        return false;
+    }
+
+    std::string serializedResponse;
+    if(!response.SerializeToString(&serializedResponse))
+    {
+        std::cerr << "Failed to serialize ModerateObjectResponse" << std::endl;
+        return false;
+    }
+
+    RdKafka::ErrorCode error = producer_->produce(
+        topic,
+        -1,
+        RdKafka::Producer::RK_MSG_COPY,
+        const_cast<char*>(serializedResponse.c_str()),
+        serializedResponse.size(),
+        key.c_str(),
+        key.size(),
+        0,
+        nullptr
+    );
+
+    if(error != RdKafka::ERR_NO_ERROR)
+    {
+        std::cerr << "Failed to produce response message: " << RdKafka::err2str(error) << std::endl;
+        return false;
+    }
+
+    producer_->poll(0);
+
+    return true;
+
 }
 
 bool KafkaProducer::Flush(int timeoutMs) {
@@ -212,6 +279,24 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
               << ": " << (isFlagged ? "FLAGGED" : "PASSED") << std::endl;
 
 
+    if(producer_)
+    {
+        std::string response_key = std::to_string(request_id);
+        if(!producer_->SendResponseAsync(response, config_.result_topic, response_key))
+        {
+           std::cerr << "Failed to send moderation response to Kafka for request ID: " << request_id << std::endl;
+        }
+        else
+        {
+            std::cout << "Sent moderation response to topic " << config_.result_topic 
+                      << " for request ID: " << request_id << std::endl;
+        }
+    }
+    else{
+        std::cerr << "Producer not available, cannot send response for request ID: " << request_id << std::endl;
+    }
+    
+
     if (callback_)
     {
         callback_(response, request_id);
@@ -219,12 +304,10 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
     
 }
 
-KafkaConsumer::KafkaConsumer(const KafkaConfig& config, MessageCallback callback) : config_(config), callback_(callback), running_(false) {
+KafkaConsumer::KafkaConsumer(const KafkaConfig& config, MessageCallback callback, KafkaProducer* producer) : config_(config), callback_(callback), producer_(producer), running_(false) {
     std::string errorString;
     RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
     event_cb_ = std::make_unique<ConsumerEventCb>();
-
-    std::unique_ptr<ConsumerRebalanceCb> rebalance_cb_ = std::make_unique<ConsumerRebalanceCb>();
 
     conf->set("bootstrap.servers", config.brokers, errorString);
     conf->set("group.id", config.consumer_group_id, errorString);
@@ -237,7 +320,6 @@ KafkaConsumer::KafkaConsumer(const KafkaConfig& config, MessageCallback callback
     conf->set("max.poll.interval.ms", "300000", errorString);
     conf->set("socket.timeout.ms", "60000", errorString);
     conf->set("request.timeout.ms", "30000", errorString);
-    conf->set("rebalance_cb", rebalance_cb_.get(), errorString);
 
     consumer_.reset(RdKafka::KafkaConsumer::create(conf, errorString));
     if(!consumer_)
@@ -248,7 +330,7 @@ KafkaConsumer::KafkaConsumer(const KafkaConfig& config, MessageCallback callback
     delete conf;
 
     std::vector<std::string> topics;
-    topics.push_back(config.result_topic);
+    topics.push_back(config.request_topic);
 
     RdKafka::ErrorCode error = consumer_->subscribe(topics);
     if(error != RdKafka::ERR_NO_ERROR)
@@ -256,7 +338,7 @@ KafkaConsumer::KafkaConsumer(const KafkaConfig& config, MessageCallback callback
         throw std::runtime_error("Failed to subscribe to Kafka topics: " + RdKafka::err2str(error));
     }
 
-    std::cout << "Kafka consumer subscribed to topic: " << config.result_topic << std::endl;
+    std::cout << "Kafka consumer subscribed to topic: " << config.request_topic << std::endl;
 
     
     

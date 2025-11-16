@@ -25,24 +25,6 @@ class ConsumerEventCb : public RdKafka::EventCb {
         void event_cb(RdKafka::Event &event) override;
 };
 
-class ConsumerRebalanceCb : public RdKafka::RebalanceCb{
-    public:
-        void rebalance_cb(RdKafka::KafkaConsumer* consumer, RdKafka::ErrorCode err, 
-                        std::vector<RdKafka::TopicPartition*>& partitions) override {
-                            if(err == RdKafka::ERR__ASSIGN_PARTITIONS)
-                            {
-                                consumer->assign(partitions);
-                                std::cout << "Partitions assigned" << std::endl;
-                            } else if(err == RdKafka::ERR__REVOKE_PARTITIONS)
-                            {
-                                consumer->unassign();
-                                std::cout << "Partitions revoked" << std::endl;
-                            }
-                        }
-
-
-};
-
 class KafkaClient {
     
     public:
@@ -51,6 +33,7 @@ class KafkaClient {
 
         void Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t)> result_callback);
         bool SendRequestAsync(const moderation::ModerateObjectRequest& request);
+        bool SendResponseAsync(const moderation::ModerateObjectResponse& response, int64_t requestId);
         void StartConsumer();
         void StopConsumer();
         void Flush();
@@ -61,6 +44,7 @@ class KafkaClient {
         KafkaConfig config_;
         std::unique_ptr<KafkaProducer> producer_;
         std::unique_ptr<KafkaConsumer> consumer_;
+        std::unique_ptr<KafkaProducer> response_producer_;
         bool initialized_;
         std::mutex mutex_;
 };
@@ -70,7 +54,8 @@ class KafkaProducer {
         explicit KafkaProducer(const KafkaConfig& config);
         ~KafkaProducer();
 
-        bool SendRequestAsync(const moderation::ModerateObjectRequest& request);
+        bool SendRequestAsync(const moderation::ModerateObjectRequest& request, const std::string& topic);
+        bool SendResponseAsync(const moderation::ModerateObjectResponse& response, const std::string& topic, const std::string& key);
         bool Flush(int timeoutMs = 10000);
         bool isHealthy() const { return producer_ != nullptr; }
     
@@ -86,7 +71,7 @@ class KafkaConsumer {
     public:
         using MessageCallback = std::function<void(const moderation::ModerateObjectResponse&, int64_t)>;
 
-        explicit KafkaConsumer(const KafkaConfig& config, MessageCallback callback);
+        explicit KafkaConsumer(const KafkaConfig& config, MessageCallback callback, KafkaProducer* producer = nullptr);
         ~KafkaConsumer();
 
         void Start();
@@ -98,6 +83,7 @@ class KafkaConsumer {
         void ProcessMessage(RdKafka::Message* message);
 
         KafkaConfig config_;
+        KafkaProducer* producer_;
         MessageCallback callback_;
         std::unique_ptr<RdKafka::KafkaConsumer> consumer_;
         std::unique_ptr<ConsumerEventCb> event_cb_;
