@@ -71,3 +71,4 @@ for var in $(env | grep '{vault:' | cut -d= -f1); do
 done
 
 exec "$@"
+
