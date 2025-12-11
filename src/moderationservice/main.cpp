@@ -1,6 +1,8 @@
 #include <iostream>
 #include "service/service.hpp"
 #include "server/server.hpp"
+#include "repository/repository.hpp"
+#include "handler/handler.hpp"
 #include "config/config.hpp"
 
 
@@ -12,14 +14,18 @@ int main() {
 
       TextProcessingConstants::HashTrieMaps::InitializeForbiddenWords();
 
+      auto repository = std::make_shared<ModerationRepository>(config.database_url);
       auto kafkaClient = std::make_shared<KafkaClient>(kafkaConfig);
+      auto service = std::make_shared<ModerationService>(repository, kafkaClient);
 
-      std::shared_ptr<ModerationService> mService = std::make_shared<ModerationService>(kafkaClient);
-      
-      mService->InitializeKafkaCallback();
+      service->InitializeKafkaCallback();
       kafkaClient->StartConsumer();
 
-      std::unique_ptr<Server> server = std::make_unique<Server>(config.host + ":" + config.port, mService, "ModerationService");
+      auto handler = std::make_shared<ModerationHandler>(service);
+
+      std::unique_ptr<Server> server = std::make_unique<Server>(
+        config.host + ":" + config.port, handler, "ModerationService"
+      );
       
       server->Start();
 
