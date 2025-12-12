@@ -10,12 +10,12 @@ ModerationService::ModerationService(std::shared_ptr<ModerationRepository> repos
 void ModerationService::InitializeKafkaCallback()
 {
     auto callback = [weakThis = std::weak_ptr<ModerationService>(shared_from_this())]
-                    (const moderation::ModerateObjectResponse& response, int64_t requestId)
+                    (const moderation::ModerateObjectResponse& response, int64_t requestId, const std::string& originalText)
                     {
                         try {
                             if(auto self = weakThis.lock())
                             {
-                                self->HandleModerationResult(response, requestId);
+                                self->HandleModerationResult(response, requestId, originalText);
                             }
                             else
                             {
@@ -49,13 +49,6 @@ bool ModerationService::ProcessModerationRequest(int64_t request_id, const std::
             return false;
         }
 
-        {
-            std::lock_guard<std::mutex> lock(pendingMutex_);
-            pending_text_[request_id] = text;
-            std::cout << "[Service] Stored text for request ID " << request_id 
-                      << " (text length: " << text.length() << ")" << std::endl;
-        }
-
         return true;
     } catch(const std::exception& e)
     {
@@ -64,50 +57,25 @@ bool ModerationService::ProcessModerationRequest(int64_t request_id, const std::
     }
 }
 
-void ModerationService::HandleModerationResult(const moderation::ModerateObjectResponse& response, int64_t requestId)
+void ModerationService::HandleModerationResult(const moderation::ModerateObjectResponse& response, int64_t requestId, const std::string& originalText)
 {
 
     try {
         bool isFlagged = response.success();
         std::string reason = "";
 
-        std::string original_text;
-        {
-            std::lock_guard<std::mutex> lock(pendingMutex_);
-            std::cout << "[Service] DEBUG: Looking for request ID " << requestId 
-                      << " in map. Map size: " << pending_text_.size() << std::endl;
-
-            std::cout << "[Service] DEBUG: Map contains request IDs: ";
-            for(const auto& pair : pending_text_) {
-                std::cout << pair.first << " ";
-            }
-            std::cout << std::endl;
-
-            auto it = pending_text_.find(requestId);
-            if(it != pending_text_.end())
-            {
-                original_text = it->second;
-                std::cout << "[Service] Retrieved text for request ID " << requestId 
-                          << " (length: " << original_text.length() << ")" << std::endl;
-                pending_text_.erase(it);
-            }
-            else
-            {
-               std::cerr << "[Service] ERROR: Original text not found for request ID: " << requestId 
-                          << ". Map size: " << pending_text_.size() << std::endl;
-            }
-        }
+        std::string original_text = originalText;
 
         if(isFlagged)
         {
             std::cout << "Text flagged for moderation, request id: " << requestId << std::endl;
+            SaveResultToDatabase(requestId, original_text, isFlagged, reason);
+
         }
         else {
             std::cout << "Text passed moderation: " << requestId << std::endl;
         }
-
         
-        SaveResultToDatabase(requestId, original_text, isFlagged, reason);
     } catch(const std::exception& e) {
         std::cerr << "Error handling moderation result: " << e.what() << std::endl;
     }

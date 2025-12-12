@@ -6,7 +6,7 @@ KafkaClient::KafkaClient(const KafkaConfig& config) : config_(config), initializ
     
 }
 
-void KafkaClient::Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t)> result_callback)
+void KafkaClient::Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t, const std::string&)> result_callback)
 {
     if (initialized_)
     {
@@ -299,7 +299,7 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
 
     if (callback_)
     {
-        callback_(response, request_id);
+        callback_(response, request_id, request.text());
     }
     
 }

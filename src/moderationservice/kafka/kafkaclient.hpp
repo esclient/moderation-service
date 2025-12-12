@@ -31,7 +31,7 @@ class KafkaClient {
         explicit KafkaClient(const KafkaConfig& config);
         ~KafkaClient();
 
-        void Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t)> result_callback);
+        void Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t, const std::string&)> result_callback);
         bool SendRequestAsync(const moderation::ModerateObjectRequest& request);
         bool SendResponseAsync(const moderation::ModerateObjectResponse& response, int64_t requestId);
         void StartConsumer();
@@ -69,7 +69,7 @@ class KafkaProducer {
 
 class KafkaConsumer {
     public:
-        using MessageCallback = std::function<void(const moderation::ModerateObjectResponse&, int64_t)>;
+        using MessageCallback = std::function<void(const moderation::ModerateObjectResponse&, int64_t, const std::string&)>;
 
         explicit KafkaConsumer(const KafkaConfig& config, MessageCallback callback, KafkaProducer* producer = nullptr);
         ~KafkaConsumer();

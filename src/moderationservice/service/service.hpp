@@ -26,13 +26,12 @@ class ModerationService final : public std::enable_shared_from_this<ModerationSe
         explicit ModerationService(std::shared_ptr<ModerationRepository> repository, std::shared_ptr<KafkaClient> kafkaClient);
         void InitializeKafkaCallback();
         bool ProcessModerationRequest(int64_t requestId, const std::string& text);
-        void HandleModerationResult(const moderation::ModerateObjectResponse& response, int64_t requestId);
+        void HandleModerationResult(const moderation::ModerateObjectResponse& response, int64_t requestId, const std::string& originalText);
 
     private:
         void SaveResultToDatabase(int64_t request_id, const std::string& text, bool is_flagged, const std::string& reason = "");
         std::shared_ptr<ModerationRepository> repository_;
         std::shared_ptr<KafkaClient> kafkaClient_;
-        std::unordered_map<int64_t, std::string> pending_text_;
         std::mutex pendingMutex_;
         std::mutex mutex_;
 };
