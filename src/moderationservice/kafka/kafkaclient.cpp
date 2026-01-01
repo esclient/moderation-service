@@ -259,6 +259,9 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
         std::cerr << "Failed to parse ModerateObjectRequest from message payload" << std::endl;
         return;
     }
+
+    moderation::ObjectType object_type = request.type();
+
     
     std::cout << "Received ModerateObjectRequest for request ID " << request_id <<", text: " << request.text() << std::endl;
 
@@ -299,7 +302,7 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
 
     if (callback_)
     {
-        callback_(response, request_id, request.text());
+        callback_(response, request_id, request.text(), object_type);
     }
     
 }

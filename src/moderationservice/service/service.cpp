@@ -57,19 +57,17 @@ bool ModerationService::ProcessModerationRequest(int64_t request_id, const std::
     }
 }
 
-void ModerationService::HandleModerationResult(const moderation::ModerateObjectResponse& response, int64_t requestId, const std::string& originalText)
+void ModerationService::HandleModerationResult(const moderation::ModerateObjectResponse& response, int64_t requestId, const std::string& originalText, moderation::ObjectType objectType)
 {
 
     try {
         bool isFlagged = response.success();
         std::string reason = "";
 
-        std::string original_text = originalText;
-
         if(isFlagged)
         {
             std::cout << "Text flagged for moderation, request id: " << requestId << std::endl;
-            SaveResultToDatabase(requestId, original_text, isFlagged, reason);
+            SaveResultToDatabase(requestId, originalText, isFlagged, reason, objectType);
 
         }
         else {
@@ -81,10 +79,11 @@ void ModerationService::HandleModerationResult(const moderation::ModerateObjectR
     }
 }
 
-void ModerationService::SaveResultToDatabase(int64_t request_id, const std::string& text, bool is_flagged, const std::string& reason)
+void ModerationService::SaveResultToDatabase(int64_t object_id, const std::string& text, bool is_flagged, const std::string& reason, moderation::ObjectType object_type)
 {
     ModerationRecord record;
-    record.request_id = request_id;
+    record.object_id = object_id;
+    record.object_type = object_type;
     record.text = text;
     record.is_flagged = is_flagged; 
     record.moderated_at = std::chrono::system_clock::now();
@@ -92,9 +91,9 @@ void ModerationService::SaveResultToDatabase(int64_t request_id, const std::stri
 
     if(!repository_->SaveModerationResult(record))
     {
-        std::cerr << "Failed to save moderation result to database for request ID: " << request_id << std::endl;
+        std::cerr << "Failed to save moderation result to database for object ID: " << object_id << std::endl;
     }
     else{
-        std::cout << "Moderation result saved to database for request ID: " << request_id << std::endl;
+        std::cout << "Moderation result saved to database for object ID: " << object_id << std::endl;
     }
 }

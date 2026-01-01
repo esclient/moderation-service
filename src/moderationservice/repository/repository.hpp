@@ -7,10 +7,12 @@
 #include <optional>
 #include "config/config.hpp"
 #include <pqxx/pqxx>
+#include "moderation.pb.h"
 
 
 struct ModerationRecord {
-    int64_t request_id;
+    int64_t object_id;
+    moderation::ObjectType object_type;
     std::string text;
     bool is_flagged;
     std::chrono::system_clock::time_point moderated_at;
@@ -24,7 +26,8 @@ class ModerationRepository {
     ~ModerationRepository();
     bool SaveModerationResult(const ModerationRecord& result); 
     
-    std::optional<ModerationRecord> GetModerationRecord(int64_t request_id);
+    std::vector<ModerationRecord> GetModerationRecordsByType(moderation::ObjectType object_type, int limit = 100);
+    std::optional<ModerationRecord> GetModerationRecord(int64_t object_id);
     std::vector<ModerationRecord> GetAllModerationRecords(int limit = 100);
 
     private:
