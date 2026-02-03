@@ -6,16 +6,15 @@ ModerationService::ModerationService(std::shared_ptr<ModerationRepository> repos
     kafkaClient_(std::move(kafkaClient)) {
     TextProcessingConstants::HashTrieMaps::InitializeForbiddenWords();
 }
-
 void ModerationService::InitializeKafkaCallback()
 {
     auto callback = [weakThis = std::weak_ptr<ModerationService>(shared_from_this())]
-                    (const moderation::ModerateObjectResponse& response, int64_t requestId, const std::string& originalText)
+                    (const moderation::ModerateObjectResponse& response, int64_t requestId, const std::string& originalText, moderation::ObjectType object_type)
                     {
                         try {
                             if(auto self = weakThis.lock())
                             {
-                                self->HandleModerationResult(response, requestId, originalText);
+                                self->HandleModerationResult(response, requestId, originalText, object_type);
                             }
                             else
                             {
@@ -28,11 +27,10 @@ void ModerationService::InitializeKafkaCallback()
                     };
     kafkaClient_->Initialize(callback);
 }
-
-
 bool ModerationService::ProcessModerationRequest(int64_t request_id, const std::string& text)
 {
-    try{
+    try
+    {
         if(text.empty() || request_id == 0)
         {
             std::cerr << "[Service] ERROR: Invalid moderation request. Text is empty or request ID is zero." << std::endl;
@@ -56,7 +54,6 @@ bool ModerationService::ProcessModerationRequest(int64_t request_id, const std::
         return false;
     }
 }
-
 void ModerationService::HandleModerationResult(const moderation::ModerateObjectResponse& response, int64_t requestId, const std::string& originalText, moderation::ObjectType objectType)
 {
 
@@ -94,6 +91,10 @@ void ModerationService::SaveResultToDatabase(int64_t object_id, const std::strin
         std::cerr << "Failed to save moderation result to database for object ID: " << object_id << std::endl;
     }
     else{
-        std::cout << "Moderation result saved to database for object ID: " << object_id << std::endl;
+        std::string type_name = (object_type == moderation::OBJECT_TYPE_COMMENT_TEXT ? "COMMENT_TEXT" :
+                            object_type == moderation::OBJECT_TYPE_MOD_DESCRIPTION ? "MOD_DESCRIPTION" :
+                            object_type == moderation::OBJECT_TYPE_USER_NAME ? "USER_NAME" : "UNSPECIFIED");
+
+        std::cout << "Moderation result saved to database for object ID: " << object_id << ", Type: " << type_name << std::endl;
     }
 }

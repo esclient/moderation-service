@@ -31,20 +31,18 @@ class KafkaClient {
         explicit KafkaClient(const KafkaConfig& config);
         ~KafkaClient();
 
-        void Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t, const std::string&)> result_callback);
+        void Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t, const std::string&, moderation::ObjectType)> result_callback);
         bool SendRequestAsync(const moderation::ModerateObjectRequest& request);
-        bool SendResponseAsync(const moderation::ModerateObjectResponse& response, int64_t requestId);
         void StartConsumer();
         void StopConsumer();
         void Flush();
-        bool isHealthy();
+        bool isHealthy(); // needed for Production phase
         void Shutdown();
 
     private:
         KafkaConfig config_;
         std::unique_ptr<KafkaProducer> producer_;
         std::unique_ptr<KafkaConsumer> consumer_;
-        std::unique_ptr<KafkaProducer> response_producer_;
         bool initialized_;
         std::mutex mutex_;
 };
@@ -69,7 +67,7 @@ class KafkaProducer {
 
 class KafkaConsumer {
     public:
-        using MessageCallback = std::function<void(const moderation::ModerateObjectResponse&, int64_t, const std::string&)>;
+        using MessageCallback = std::function<void(const moderation::ModerateObjectResponse&, int64_t, const std::string&, moderation::ObjectType)>;
 
         explicit KafkaConsumer(const KafkaConfig& config, MessageCallback callback, KafkaProducer* producer = nullptr);
         ~KafkaConsumer();

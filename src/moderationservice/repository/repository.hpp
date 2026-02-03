@@ -25,14 +25,9 @@ class ModerationRepository {
     explicit ModerationRepository(const std::string& database_url);
     ~ModerationRepository();
     bool SaveModerationResult(const ModerationRecord& result); 
-    
-    std::vector<ModerationRecord> GetModerationRecordsByType(moderation::ObjectType object_type, int limit = 100);
-    std::optional<ModerationRecord> GetModerationRecord(int64_t object_id);
-    std::vector<ModerationRecord> GetAllModerationRecords(int limit = 100);
 
     private:
     std::string database_url_;
     std::unique_ptr<pqxx::connection> db_connection_;
 
-    void ParseDatabaseUrl(const std::string& database_url);
 };

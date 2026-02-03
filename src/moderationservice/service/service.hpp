@@ -29,7 +29,7 @@ class ModerationService final : public std::enable_shared_from_this<ModerationSe
         void HandleModerationResult(const moderation::ModerateObjectResponse& response, int64_t requestId, const std::string& originalText, moderation::ObjectType objectType);
 
     private:
-        void SaveResultToDatabase(int64_t object_id, const std::string& text, bool is_flagged, const std::string& reason = "", moderation::ObjectType object_type = moderation::ObjectType::OBJECT_TYPE_UNSPECIFIED;
+        void SaveResultToDatabase(int64_t object_id, const std::string& text, bool is_flagged, const std::string& reason = "", moderation::ObjectType object_type = moderation::ObjectType::OBJECT_TYPE_UNSPECIFIED);
         std::shared_ptr<ModerationRepository> repository_;
         std::shared_ptr<KafkaClient> kafkaClient_;
         std::mutex pendingMutex_;
