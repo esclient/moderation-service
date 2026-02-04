@@ -267,8 +267,8 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
     std::cout << "Received ModerateObjectRequest for request ID " << request_id <<", ObjectType: " << type_value 
                 << " (" << 
                 (
-                    type_value == 1 ? "COMMENT" : 
-                    type_value == 2 ? "MOD_DESCRIPTION" : 
+                    type_value == 1 ? "MOD_DESCRIPTION" : 
+                    type_value == 2 ? "COMMENT_TEXT" : 
                     type_value == 3 ? "USER_NAME" : "UNSPECIFIED"
                 ) 
                 << ")" 
