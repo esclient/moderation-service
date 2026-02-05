@@ -10,11 +10,24 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
 set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
     add_compile_definitions(U_STATIC_IMPLEMENTATION)
+endif()
+
+option(ENABLE_CLANG_TIDY "Enable clang-tidy analysis during build" OFF)
+
+if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+    if(CLANG_TIDY_EXE)
+        message(STATUS "Found clang-tidy: ${CLANG_TIDY_EXE}")
+        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};-p=${CMAKE_BINARY_DIR}")
+    else()
+        message(STATUS "clang-tidy not found, disabling analysis")
+    endif()
 endif()
 
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
@@ -143,6 +156,69 @@ target_link_libraries(${PROJECT_NAME}
 
 if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE U_STATIC_IMPLEMENTATION)
+endif()
+
+set(PROJECT_SOURCE_DIRS
+    ${PROJECT_SOURCE_DIR}/src/moderationservice
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+file(GLOB_RECURSE PROJECT_SOURCE_FILES
+    ${PROJECT_SOURCE_DIRS}/*.cpp
+    ${PROJECT_SOURCE_DIRS}/*.cc
+    ${PROJECT_SOURCE_DIRS}/*.cxx
+    ${PROJECT_SOURCE_DIRS}/*.h
+    ${PROJECT_SOURCE_DIRS}/*.hpp
+)
+
+find_program(CPPCHECK_EXE NAMES cppcheck)
+if(CPPCHECK_EXE)
+    add_custom_target(cppcheck
+        COMMAND ${CPPCHECK_EXE}
+            --enable=warning,style,performance,portability
+            --inline-suppr
+            --project=${CMAKE_BINARY_DIR}/compile_commands.json
+            --library=gnu
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running cppcheck"
+        VERBATIM
+    )
+else()
+    message(STATUS "cppcheck not found; "cppcheck" target will not be created")
+endif()
+
+find_program(CPPLINT_EXE NAMES cpplint)
+if(CPPLINT_EXE)
+    add_custom_target(cpplint
+        COMMAND ${CPPLINT_EXE}
+            --recursive
+            --filter=-legal/copyright
+            ${PROJECT_SOURCE_DIRS}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running cpplint"
+        VERBATIM
+    )
+else()
+    message(STATUS "cpplint not found; "cpplint" target will not be created")
+endif()
+
+find_program(CLANG_FORMAT_EXE NAMES clang_format)
+if(CLANG_FORMAT_EXE)
+    add_custom_target(clang-format
+        COMMAND ${CLANG_FORMAT_EXE} -i ${PROJECT_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Formatting sources with clang-format"
+        VERBATIM
+    )
+
+    add_custom_target(clang-check-format
+        COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${PROJECT_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Checking clang-format compliance"
+        VERBATIM
+    )
+else()
+    message(STATUS "clang-format not found; 'format' and 'check-format' targets will not be created")
 endif()
 
 #link header files

@@ -34,6 +34,20 @@ kafka-broker:
 
     docker exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic moderation-result
 
+configure:
+    cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+lint:
+    cmake --build build --target cppcheck cpplint
+
+format-check:
+    cmake --build build --target check-format
+    cmake-format CMakeLists.txt | diff -u CMakeLists.txt - || (echo "CMakeLists.txt not formatted"; exit 1)
+
+format-all:
+    cmake --build build --target format
+    cmake-format -i CMakeLists.txt
+
 run-l: build-linux
     ENV=dev tools/load_envs.sh ./build/moderation-service
 
