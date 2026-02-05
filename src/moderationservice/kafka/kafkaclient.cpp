@@ -5,8 +5,7 @@
 KafkaClient::KafkaClient(const KafkaConfig& config) : config_(config), initialized_(false) {
     
 }
-
-void KafkaClient::Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t)> result_callback)
+void KafkaClient::Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t, const std::string&, moderation::ObjectType)> result_callback)
 {
     if (initialized_)
     {
@@ -32,18 +31,6 @@ bool KafkaClient::SendRequestAsync(const moderation::ModerateObjectRequest& requ
         return false;
     }
     return producer_->SendRequestAsync(request, config_.request_topic);
-}
-
-bool KafkaClient::SendResponseAsync(const moderation::ModerateObjectResponse& response, int64_t requestId)
-{
-    if(!initialized_ || !producer_)
-    {
-        std::cerr << "KafkaClient not initialized." << std::endl;
-        return false;
-    }
-
-    std::string key = std::to_string(requestId);
-    return producer_->SendResponseAsync(response, config_.result_topic, key);
 }
 
 void ProducerDeliveryReportCb::dr_cb(RdKafka::Message &message) {
@@ -259,8 +246,33 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
         std::cerr << "Failed to parse ModerateObjectRequest from message payload" << std::endl;
         return;
     }
+
+    moderation::ObjectType object_type = request.type();
+
+    if(moderation::ObjectType_IsValid(static_cast<int>(object_type)) == false)
+    {
+        std::cerr << "Received ModerateObjectRequest with invalid ObjectType for request ID " << request_id << std::endl;
+        return;
+    }
+
+    if(object_type == moderation::OBJECT_TYPE_UNSPECIFIED)
+    {
+        std::cerr << "Received ModerateObjectRequest with unspecified ObjectType for request ID " << request_id << std::endl;
+        return;
+    }
+
+    int type_value = static_cast<int>(object_type);
+  
     
-    std::cout << "Received ModerateObjectRequest for request ID " << request_id <<", text: " << request.text() << std::endl;
+    std::cout << "Received ModerateObjectRequest for request ID " << request_id <<", ObjectType: " << type_value 
+                << " (" << 
+                (
+                    type_value == 1 ? "MOD_DESCRIPTION" : 
+                    type_value == 2 ? "COMMENT_TEXT" : 
+                    type_value == 3 ? "USER_NAME" : "UNSPECIFIED"
+                ) 
+                << ")" 
+            << ", text: " << request.text() << std::endl;
 
     bool isFlagged = false;
     
@@ -299,7 +311,7 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message)
 
     if (callback_)
     {
-        callback_(response, request_id);
+        callback_(response, request_id, request.text(), object_type);
     }
     
 }

@@ -24,6 +24,7 @@ find_package(gRPC REQUIRED CONFIG)
 find_package(ICU REQUIRED COMPONENTS uc i18n data)
 find_package(RdKafka REQUIRED)
 find_package(Threads REQUIRED)
+find_package(libpqxx REQUIRED)
 
 set(CPM_DOWNLOAD_VERSION 0.40.2)
 if(CPM_SOURCE_CACHE)
@@ -114,6 +115,8 @@ add_executable(${PROJECT_NAME}
     src/moderationservice/main.cpp
     src/moderationservice/server/server.cpp
     src/moderationservice/service/service.cpp
+    src/moderationservice/handler/handler.cpp
+    src/moderationservice/repository/repository.cpp
     src/moderationservice/service/text_normalization.cpp
     src/moderationservice/service/leetspeak_normalization.cpp
     src/moderationservice/service/word_checker.cpp
@@ -135,6 +138,7 @@ target_link_libraries(${PROJECT_NAME}
         Threads::Threads
         RdKafka::rdkafka
         RdKafka::rdkafka++
+        libpqxx::pqxx
 )
 
 if(WIN32)
@@ -146,8 +150,12 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC 
         ${PROJECT_SOURCE_DIR}/include
     PRIVATE
+        ${PROJECT_SOURCE_DIR}/src/moderationservice
+        ${PROJECT_SOURCE_DIR}/src/moderationservice/repository
+        ${PROJECT_SOURCE_DIR}/src/moderationservice/handler
         ${PROJECT_SOURCE_DIR}/src/moderationservice/service 
         ${PROJECT_SOURCE_DIR}/src/moderationservice/model
         ${PROJECT_SOURCE_DIR}/src/moderationservice/kafka
+
         ${GENPROTO_DIR}
 )

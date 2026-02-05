@@ -3,6 +3,7 @@
     protobuf/5.27.0
     icu/77.1
     librdkafka/2.12.1
+    libpqxx/7.10.3
 
 [generators]
     CMakeDeps
