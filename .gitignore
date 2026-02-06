@@ -69,3 +69,5 @@ external/
 external/tsl-hat-trie/
 
 .proto
+
+build-lint/

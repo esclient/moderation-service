@@ -37,16 +37,23 @@ kafka-broker:
 configure:
     cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
+configure-lint: fetch-proto
+    conan install . --output-folder=build-lint --build=missing -c tools.cmake.cmaketoolchain:generator=Ninja
+    cmake -S . -B build-lint \
+        -G "Ninja" \
+        -DCMAKE_TOOLCHAIN_FILE=build-lint/conan_toolchain.cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
 lint:
-    cmake --build build --target cppcheck cpplint
+    cmake --build build-lint --target cppcheck cpplint
 
 format-check:
-    cmake --build build --target check-format
-    cmake-format CMakeLists.txt | diff -u CMakeLists.txt - || (echo "CMakeLists.txt not formatted"; exit 1)
+    cmake --build build-lint --target clang-check-format cmake-format-check
 
-format-all:
-    cmake --build build --target format
-    cmake-format -i CMakeLists.txt
+lint-all-safe:
+    just configure-lint
+    cmake --build build-lint --target lint-all 
 
 run-l: build-linux
     ENV=dev tools/load_envs.sh ./build/moderation-service

@@ -164,12 +164,23 @@ set(PROJECT_SOURCE_DIRS
 )
 
 file(GLOB_RECURSE PROJECT_SOURCE_FILES
-    ${PROJECT_SOURCE_DIRS}/*.cpp
-    ${PROJECT_SOURCE_DIRS}/*.cc
-    ${PROJECT_SOURCE_DIRS}/*.cxx
-    ${PROJECT_SOURCE_DIRS}/*.h
-    ${PROJECT_SOURCE_DIRS}/*.hpp
+    "${PROJECT_SOURCE_DIR}/src/moderationservice/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/moderationservice/*.cc"
+    "${PROJECT_SOURCE_DIR}/src/moderationservice/*.cxx"
+    "${PROJECT_SOURCE_DIR}/src/moderationservice/*.h"
+    "${PROJECT_SOURCE_DIR}/src/moderationservice/*.hpp"
+    "${PROJECT_SOURCE_DIR}/include/*.cpp"
+    "${PROJECT_SOURCE_DIR}/include/*.cc"
+    "${PROJECT_SOURCE_DIR}/include/*.cxx"
+    "${PROJECT_SOURCE_DIR}/include/*.h"
+    "${PROJECT_SOURCE_DIR}/include/*.hpp"
 )
+
+# ============================================================================
+# LINTING SECTION - Temporarily allow system PATH for finding linting tools
+# ============================================================================
+set(_OLD_CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH ${CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH})
+set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH TRUE)
 
 find_program(CPPCHECK_EXE NAMES cppcheck)
 if(CPPCHECK_EXE)
@@ -179,12 +190,13 @@ if(CPPCHECK_EXE)
             --inline-suppr
             --project=${CMAKE_BINARY_DIR}/compile_commands.json
             --library=gnu
+            ${PROJECT_SOURCE_DIRS}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running cppcheck"
         VERBATIM
     )
 else()
-    message(STATUS "cppcheck not found; "cppcheck" target will not be created")
+    message(STATUS "cppcheck not found; 'cppcheck' target will not be created")
 endif()
 
 find_program(CPPLINT_EXE NAMES cpplint)
@@ -199,10 +211,10 @@ if(CPPLINT_EXE)
         VERBATIM
     )
 else()
-    message(STATUS "cpplint not found; "cpplint" target will not be created")
+    message(STATUS "cpplint not found; 'cpplint' target will not be created")
 endif()
 
-find_program(CLANG_FORMAT_EXE NAMES clang_format)
+find_program(CLANG_FORMAT_EXE NAMES clang-format)
 if(CLANG_FORMAT_EXE)
     add_custom_target(clang-format
         COMMAND ${CLANG_FORMAT_EXE} -i ${PROJECT_SOURCE_FILES}
@@ -218,8 +230,82 @@ if(CLANG_FORMAT_EXE)
         VERBATIM
     )
 else()
-    message(STATUS "clang-format not found; 'format' and 'check-format' targets will not be created")
+    message(STATUS "clang-format not found; 'clang-format' targets will not be created")
 endif()
+
+find_program(CMAKE_FORMAT_EXE NAMES cmake-format)
+if(CMAKE_FORMAT_EXE)
+    file(GLOB_RECURSE CMAKE_FILES
+        "${PROJECT_SOURCE_DIR}/CMakeLists.txt"
+        "${PROJECT_SOURCE_DIR}/*.cmake"
+    )
+
+    add_custom_target(cmake-format
+        COMMAND ${CMAKE_FORMAT_EXE} -i ${CMAKE_FILES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Formatting CMake files with cmake-format"
+        VERBATIM
+    )
+
+    add_custom_target(cmake-format-check
+        COMMAND ${CMAKE_FORMAT_EXE} --check ${CMAKE_FILES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Checking cmake-format compliance"
+        VERBATIM
+    )
+else()
+    message(STATUS "cmake-format not found; 'cmake-format' targets will not be created")
+endif()
+
+set(AVAILABLE_LINTERS)
+if(CPPCHECK_EXE)
+    list(APPEND AVAILABLE_LINTERS "cppcheck")
+endif()
+if(CPPLINT_EXE)
+    list(APPEND AVAILABLE_LINTERS "cpplint")
+endif()
+if(CLANG_FORMAT_EXE)
+    list(APPEND AVAILABLE_LINTERS "clang-format")
+endif()
+
+if(CPPCHECK_EXE AND CPPLINT_EXE AND CLANG_FORMAT_EXE AND
+   NOT CPPCHECK_EXE STREQUAL "CPPCHECK_EXE-NOTFOUND" AND
+   NOT CPPLINT_EXE STREQUAL "CPPLINT_EXE-NOTFOUND" AND
+   NOT CLANG_FORMAT_EXE STREQUAL "CLANG_FORMAT_EXE-NOTFOUND")
+    
+    add_custom_target(lint-all
+        COMMAND ${CMAKE_COMMAND} -E echo "=== Running cppcheck ==="
+        COMMAND ${CPPCHECK_EXE}
+            --enable=warning,style,performance,portability
+            --inline-suppr
+            --project=${CMAKE_BINARY_DIR}/compile_commands.json
+            --library=gnu
+            ${PROJECT_SOURCE_DIR}/src/moderationservice
+            ${PROJECT_SOURCE_DIR}/include
+        COMMAND ${CMAKE_COMMAND} -E echo ""
+        COMMAND ${CMAKE_COMMAND} -E echo "=== Running cpplint ==="
+        COMMAND ${CPPLINT_EXE}
+            --recursive
+            --filter=-legal/copyright
+            ${PROJECT_SOURCE_DIR}/src/moderationservice
+            ${PROJECT_SOURCE_DIR}/include
+        COMMAND ${CMAKE_COMMAND} -E echo ""
+        COMMAND ${CMAKE_COMMAND} -E echo "=== Running clang-format check ==="
+        COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${PROJECT_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running all linters"
+        VERBATIM
+    )
+    message(STATUS "Created 'lint-all' target with: ${AVAILABLE_LINTERS}")
+else()
+    message(STATUS "Not all linters found (available: ${AVAILABLE_LINTERS}); 'lint-all' target will not be created")
+endif()
+
+# Restore the original setting to keep Conan dependencies isolated
+set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH ${_OLD_CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH})
+# ============================================================================
+# END LINTING SECTION
+# ============================================================================
 
 #link header files
 target_include_directories(${PROJECT_NAME} 

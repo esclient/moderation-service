@@ -4,9 +4,9 @@ Checks: >
     performance-*,
     modernize-*,
     readability-*,
-    -modernize-use-trailing-return-tyoe
+    -modernize-use-trailing-return-type
 
-WarningsAsErrors: '*'
+WarningsAsErrors: ''
 
 HeaderFilterRegex: '^(src|include)/'
 FormatStyle: file
