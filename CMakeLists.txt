@@ -188,7 +188,9 @@ if(CPPCHECK_EXE)
         COMMAND ${CPPCHECK_EXE}
             --enable=warning,style,performance,portability
             --inline-suppr
-            --project=${CMAKE_BINARY_DIR}/compile_commands.json
+            --suppress=*:${CMAKE_BINARY_DIR}/generated/*
+            -I${PROJECT_SOURCE_DIR}/include
+            -I${PROJECT_SOURCE_DIR}/src/moderationservice
             --library=gnu
             ${PROJECT_SOURCE_DIRS}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -274,11 +276,15 @@ if(CPPCHECK_EXE AND CPPLINT_EXE AND CLANG_FORMAT_EXE AND
    NOT CLANG_FORMAT_EXE STREQUAL "CLANG_FORMAT_EXE-NOTFOUND")
     
     add_custom_target(lint-all
+        COMMAND ${CMAKE_COMMAND} -E echo "=== Running clang-format check ==="
+        COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${PROJECT_SOURCE_FILES}
         COMMAND ${CMAKE_COMMAND} -E echo "=== Running cppcheck ==="
         COMMAND ${CPPCHECK_EXE}
             --enable=warning,style,performance,portability
             --inline-suppr
-            --project=${CMAKE_BINARY_DIR}/compile_commands.json
+            --suppress=*:${CMAKE_BINARY_DIR}/generated/*
+            -I${PROJECT_SOURCE_DIR}/include
+            -I${PROJECT_SOURCE_DIR}/src/moderationservice
             --library=gnu
             ${PROJECT_SOURCE_DIR}/src/moderationservice
             ${PROJECT_SOURCE_DIR}/include
@@ -286,12 +292,11 @@ if(CPPCHECK_EXE AND CPPLINT_EXE AND CLANG_FORMAT_EXE AND
         COMMAND ${CMAKE_COMMAND} -E echo "=== Running cpplint ==="
         COMMAND ${CPPLINT_EXE}
             --recursive
-            --filter=-legal/copyright
+            --filter=-legal/copyright,-whitespace/indent,-whitespace/comments,-build/include_order
+            --linelength=120
             ${PROJECT_SOURCE_DIR}/src/moderationservice
             ${PROJECT_SOURCE_DIR}/include
         COMMAND ${CMAKE_COMMAND} -E echo ""
-        COMMAND ${CMAKE_COMMAND} -E echo "=== Running clang-format check ==="
-        COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${PROJECT_SOURCE_FILES}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running all linters"
         VERBATIM

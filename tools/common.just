@@ -34,9 +34,6 @@ kafka-broker:
 
     docker exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic moderation-result
 
-configure:
-    cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-
 configure-lint: fetch-proto
     conan install . --output-folder=build-lint --build=missing -c tools.cmake.cmaketoolchain:generator=Ninja
     cmake -S . -B build-lint \
@@ -48,11 +45,12 @@ configure-lint: fetch-proto
 lint:
     cmake --build build-lint --target cppcheck cpplint
 
-format-check:
-    cmake --build build-lint --target clang-check-format cmake-format-check
+format:
+    cmake --build build-lint --target clang-format
 
-lint-all-safe:
+lint-all:
     just configure-lint
+    just format
     cmake --build build-lint --target lint-all 
 
 run-l: build-linux

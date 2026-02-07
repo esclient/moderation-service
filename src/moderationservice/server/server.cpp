@@ -1,21 +1,24 @@
-#include "server.hpp"
+#include "moderationservice/server/server.hpp"
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
 
-Server::Server(std::string server_address, std::shared_ptr<grpc::Service> service, std::string server_name)
+Server::Server(std::string server_address, std::shared_ptr<grpc::Service> service,
+               std::string server_name)
     : server_address_(server_address), service_(service), server_name_(server_name) {
 
-        this->interceptor_creators_.emplace_back(std::make_unique<LoggerInterceptorFactory>());
+    this->interceptor_creators_.emplace_back(std::make_unique<LoggerInterceptorFactory>());
+}
 
-    }
-
-void Server::Start()
-{
+void Server::Start() {
     grpc::ServerBuilder builder;
 
     builder.AddListeningPort(server_address_, grpc::InsecureServerCredentials());
 
     builder.RegisterService(this->service_.get());
-    
+
     grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
     builder.experimental().SetInterceptorCreators(std::move(this->interceptor_creators_));
@@ -25,8 +28,7 @@ void Server::Start()
     this->server_->Wait();
 }
 
-void Server::Stop()
-{
+void Server::Stop() {
     std::cout << "Shutting down " << this->server_name_ << "..." << std::endl;
     this->server_->Shutdown();
     std::cout << this->server_name_ << " shut down." << std::endl;
