@@ -1,5 +1,5 @@
-#include "moderationservice/service/word_checker.hpp"
-#include "moderationservice/model/constants.hpp"
+#include "service/word_checker.hpp"
+#include "model/constants.hpp"
 #include <string>
 #include <vector>
 

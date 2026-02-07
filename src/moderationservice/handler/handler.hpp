@@ -1,7 +1,7 @@
 #pragma once
 
-#include "moderation.grpc.pb.h" // NOLINT(build/include_subdir)
-#include "moderation.pb.h"      // NOLINT(build/include_subdir)
+#include "moderation.grpc.pb.h"
+#include "moderation.pb.h"
 #include "service/service.hpp"
 #include <grpcpp/grpcpp.h>
 #include <memory>

@@ -292,7 +292,7 @@ if(CPPCHECK_EXE AND CPPLINT_EXE AND CLANG_FORMAT_EXE AND
         COMMAND ${CMAKE_COMMAND} -E echo "=== Running cpplint ==="
         COMMAND ${CPPLINT_EXE}
             --recursive
-            --filter=-legal/copyright,-whitespace/indent,-whitespace/comments,-build/include_order
+            --filter=-legal/copyright,-whitespace/indent,-whitespace/comments,-build/include_order,-build/include_subdir
             --linelength=120
             ${PROJECT_SOURCE_DIR}/src/moderationservice
             ${PROJECT_SOURCE_DIR}/include

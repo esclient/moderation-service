@@ -1,10 +1,10 @@
 #pragma once
 
-#include "moderation.pb.h" // NOLINT(build/include_subdir)
-#include "moderationservice/kafka/kafkaclient.hpp"
-#include "moderationservice/model/constants.hpp"
-#include "moderationservice/repository/repository.hpp"
-#include "moderationservice/service/text_processor.hpp"
+#include "kafka/kafkaclient.hpp"
+#include "model/constants.hpp"
+#include "moderation.pb.h"
+#include "repository/repository.hpp"
+#include "service/text_processor.hpp"
 #include <memory>
 #include <mutex>
 #include <string>

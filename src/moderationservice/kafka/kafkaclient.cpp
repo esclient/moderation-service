@@ -1,6 +1,6 @@
-#include "moderationservice/kafka/kafkaclient.hpp"
-#include "moderationservice/model/constants.hpp"
-#include "moderationservice/service/text_processor.hpp"
+#include "kafka/kafkaclient.hpp"
+#include "model/constants.hpp"
+#include "service/text_processor.hpp"
 #include <iostream>
 #include <memory>
 #include <string>

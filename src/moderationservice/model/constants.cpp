@@ -1,4 +1,4 @@
-#include "moderationservice/model/constants.hpp"
+#include "model/constants.hpp"
 #include <unordered_map>
 
 namespace TextProcessingConstants {

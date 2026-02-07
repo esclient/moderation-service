@@ -1,5 +1,5 @@
-#include "moderationservice/service/leetspeak_normalization.hpp"
-#include "moderationservice/model/constants.hpp"
+#include "service/leetspeak_normalization.hpp"
+#include "model/constants.hpp"
 #include <string>
 
 namespace LeetspeakNormalization {

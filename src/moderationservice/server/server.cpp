@@ -1,4 +1,4 @@
-#include "moderationservice/server/server.hpp"
+#include "server/server.hpp"
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <iostream>
 #include <memory>

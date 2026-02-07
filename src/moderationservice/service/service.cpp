@@ -1,4 +1,4 @@
-#include "moderationservice/service/service.hpp"
+#include "service/service.hpp"
 #include <iostream>
 #include <memory>
 #include <string>

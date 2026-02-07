@@ -1,4 +1,4 @@
-#include "moderationservice/service/text_processor.hpp"
+#include "service/text_processor.hpp"
 #include <string>
 #include <vector>
 

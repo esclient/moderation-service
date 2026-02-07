@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config/config.hpp"
-#include "moderation.pb.h" // NOLINT(build/include_subdir)
+#include "moderation.pb.h"
 #include <atomic>
 #include <functional>
 #include <iostream>

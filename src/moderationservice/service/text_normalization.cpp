@@ -1,4 +1,4 @@
-#include "moderationservice/service/text_normalization.hpp"
+#include "service/text_normalization.hpp"
 #include <iostream>
 #include <string>
 #include <vector>

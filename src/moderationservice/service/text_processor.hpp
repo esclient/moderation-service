@@ -1,8 +1,8 @@
 #pragma once
 
-#include "moderationservice/service/leetspeak_normalization.hpp"
-#include "moderationservice/service/text_normalization.hpp"
-#include "moderationservice/service/word_checker.hpp"
+#include "service/leetspeak_normalization.hpp"
+#include "service/text_normalization.hpp"
+#include "service/word_checker.hpp"
 #include <string>
 
 namespace TextProcessor {
