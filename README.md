@@ -10,10 +10,10 @@
 
 To build and run you need the following installed: 
 
--CMake
--Just
--Conan
+-Chocolatey (Windows)
+-Python 
 -C++ compiler (gcc/clang/MSVC) (gcc recommended)
--curl
+-Docker Desktop
 -sh/bash (Windows only)
--Internet connection
+-Internet connection (Optional)
+-Electricity (Recommended)

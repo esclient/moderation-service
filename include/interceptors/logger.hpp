@@ -1,34 +1,30 @@
-#pragma once 
+#pragma once
 
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/impl/codegen/server_interceptor.h>
+#include <grpcpp/server_context.h>
 #include <grpcpp/support/interceptor.h>
 #include <grpcpp/support/server_interceptor.h>
-#include <grpcpp/server_context.h>
-#include <grpcpp/impl/codegen/server_interceptor.h>
-
+#include <iostream>
+#include <string>
 
 class LoggerInterceptor final : public grpc::experimental::Interceptor {
-    public: 
-        explicit LoggerInterceptor(grpc::experimental::ServerRpcInfo* info) {
-            std::string method = info->method();
-            if(method == "unknown")
-            {
-                std::cout << "[LoggerInterceptor] Unknown method called." << std::endl;
-            }
-            else
-            {
-                std::cout << "[LoggerInterceptor] Method called: " << method << std::endl;
-            }
+  public:
+    explicit LoggerInterceptor(grpc::experimental::ServerRpcInfo* info) {
+        std::string method = info->method();
+        if (method == "unknown") {
+            std::cout << "[LoggerInterceptor] Unknown method called." << std::endl;
+        } else {
+            std::cout << "[LoggerInterceptor] Method called: " << method << std::endl;
         }
-        void Intercept(grpc::experimental::InterceptorBatchMethods *methods)
-        {
-            methods->Proceed();
-        }
+    }
+    void Intercept(grpc::experimental::InterceptorBatchMethods* methods) { methods->Proceed(); }
 };
 
 class LoggerInterceptorFactory : public grpc::experimental::ServerInterceptorFactoryInterface {
-    public:
-        grpc::experimental::Interceptor* CreateServerInterceptor(grpc::experimental::ServerRpcInfo* info) {
-            return new LoggerInterceptor(info);
-        }
+  public:
+    grpc::experimental::Interceptor*
+    CreateServerInterceptor(grpc::experimental::ServerRpcInfo* info) {
+        return new LoggerInterceptor(info);
+    }
 };

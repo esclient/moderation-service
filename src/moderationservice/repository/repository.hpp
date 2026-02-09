@@ -1,14 +1,13 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-#include <chrono>
-#include <string>
-#include <optional>
 #include "config/config.hpp"
-#include <pqxx/pqxx>
 #include "moderation.pb.h"
-
+#include <chrono>
+#include <memory>
+#include <optional>
+#include <pqxx/pqxx>
+#include <string>
+#include <vector>
 
 struct ModerationRecord {
     int64_t object_id;
@@ -19,15 +18,13 @@ struct ModerationRecord {
     std::string reason;
 };
 
-
 class ModerationRepository {
-    public:
+  public:
     explicit ModerationRepository(const std::string& database_url);
     ~ModerationRepository();
-    bool SaveModerationResult(const ModerationRecord& result); 
+    bool SaveModerationResult(const ModerationRecord& result);
 
-    private:
+  private:
     std::string database_url_;
     std::unique_ptr<pqxx::connection> db_connection_;
-
 };
