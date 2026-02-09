@@ -55,9 +55,11 @@ void ModerationService::HandleModerationResult(const moderation::ModerateObjectR
                                                moderation::ObjectType objectType) {
     try {
         bool isFlagged = response.success();
-        std::string reason = "";
 
         if (isFlagged) {
+            std::string reason =
+                "Violates content policy"; // This can be enhanced to provide specific
+                                           // reasons based on the response
             std::cout << "Text flagged for moderation, request id: " << requestId << std::endl;
             SaveResultToDatabase(requestId, originalText, isFlagged, reason, objectType);
 

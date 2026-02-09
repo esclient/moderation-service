@@ -13,7 +13,7 @@
 class Server {
   public:
     explicit Server(std::string server_address, std::shared_ptr<grpc::Service> service = nullptr,
-                    std::string server_name = "Server");
+                    const std::string& server_name = "Server");
 
     void Start();
     void Stop();

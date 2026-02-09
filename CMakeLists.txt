@@ -18,18 +18,6 @@ if(WIN32)
     add_compile_definitions(U_STATIC_IMPLEMENTATION)
 endif()
 
-option(ENABLE_CLANG_TIDY "Enable clang-tidy analysis during build" OFF)
-
-if(ENABLE_CLANG_TIDY)
-    find_program(CLANG_TIDY_EXE NAMES clang-tidy)
-    if(CLANG_TIDY_EXE)
-        message(STATUS "Found clang-tidy: ${CLANG_TIDY_EXE}")
-        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};-p=${CMAKE_BINARY_DIR}")
-    else()
-        message(STATUS "clang-tidy not found, disabling analysis")
-    endif()
-endif()
-
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
 
 find_package(Protobuf REQUIRED CONFIG)
@@ -41,28 +29,23 @@ find_package(libpqxx REQUIRED)
 
 set(CPM_DOWNLOAD_VERSION 0.40.2)
 if(CPM_SOURCE_CACHE)
-  set(CPM_DOWNLOAD_LOCATION "${CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
+    set(CPM_DOWNLOAD_LOCATION "${CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
 elseif(DEFINED ENV{CPM_SOURCE_CACHE})
-  set(CPM_DOWNLOAD_LOCATION "$ENV{CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
+    set(CPM_DOWNLOAD_LOCATION "$ENV{CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
 else()
-  set(CPM_DOWNLOAD_LOCATION "${CMAKE_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
+    set(CPM_DOWNLOAD_LOCATION "${CMAKE_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
 endif()
 
 if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
-  message(STATUS "Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
-  file(DOWNLOAD
-       https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake
-       ${CPM_DOWNLOAD_LOCATION}
-  )
+    message(STATUS "Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
+    file(DOWNLOAD
+         https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake
+         ${CPM_DOWNLOAD_LOCATION})
 endif()
 
 include(${CPM_DOWNLOAD_LOCATION})
 
-CPMAddPackage(
-  NAME tsl-hat-trie
-  GITHUB_REPOSITORY Tessil/hat-trie
-  VERSION 0.6.0  
-)
+cpmaddpackage(NAME tsl-hat-trie GITHUB_REPOSITORY Tessil/hat-trie VERSION 0.6.0)
 
 # Set necessary variables for genproto lib target
 set(GENPROTO_LIB "genproto_lib")
@@ -81,50 +64,33 @@ set(GRPC_HDRS "${GENPROTO_DIR}/moderation.grpc.pb.h")
 # Generate protobuf files using custom command
 add_custom_command(
     OUTPUT ${PROTO_SRCS} ${PROTO_HDRS}
-    COMMAND $<TARGET_FILE:protobuf::protoc>
-    ARGS --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/.proto
-         --cpp_out=${GENPROTO_DIR}
-         ${PROTO_FILE}
+    COMMAND $<TARGET_FILE:protobuf::protoc> ARGS --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/.proto
+            --cpp_out=${GENPROTO_DIR} ${PROTO_FILE}
     DEPENDS ${PROTO_FILE}
-    COMMENT "Generating protobuf files"
-)
+    COMMENT "Generating protobuf files")
 
 # Generate gRPC files using custom command
 add_custom_command(
     OUTPUT ${GRPC_SRCS} ${GRPC_HDRS}
-    COMMAND $<TARGET_FILE:protobuf::protoc>
-    ARGS --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/.proto
-         --grpc_out=${GENPROTO_DIR}
-         --plugin=protoc-gen-grpc=$<TARGET_FILE:gRPC::grpc_cpp_plugin>
-         ${PROTO_FILE}
+    COMMAND
+        $<TARGET_FILE:protobuf::protoc> ARGS --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/.proto
+        --grpc_out=${GENPROTO_DIR} --plugin=protoc-gen-grpc=$<TARGET_FILE:gRPC::grpc_cpp_plugin>
+        ${PROTO_FILE}
     DEPENDS ${PROTO_FILE} ${PROTO_HDRS}
-    COMMENT "Generating gRPC files"
-)
+    COMMENT "Generating gRPC files")
 
 # Create library from generated sources
-add_library(${GENPROTO_LIB}
-    ${PROTO_SRCS}
-    ${PROTO_HDRS}
-    ${GRPC_SRCS}
-    ${GRPC_HDRS}
-)
+add_library(${GENPROTO_LIB} ${PROTO_SRCS} ${PROTO_HDRS} ${GRPC_SRCS} ${GRPC_HDRS})
 
-target_include_directories(${GENPROTO_LIB}
-    PUBLIC
-        ${GENPROTO_DIR}
-        ${protobuf_INCLUDE_DIRS_RELEASE}
-        ${grpc_INCLUDE_DIRS_RELEASE}
-        ${icu_INCLUDE_DIRS_RELEASE}
-)
+target_include_directories(
+    ${GENPROTO_LIB} PUBLIC ${GENPROTO_DIR} ${protobuf_INCLUDE_DIRS_RELEASE}
+                           ${grpc_INCLUDE_DIRS_RELEASE} ${icu_INCLUDE_DIRS_RELEASE})
 
-target_link_libraries(${GENPROTO_LIB}
-    PUBLIC
-        protobuf::libprotobuf
-        gRPC::grpc++
-)
+target_link_libraries(${GENPROTO_LIB} PUBLIC protobuf::libprotobuf gRPC::grpc++)
 
-#link source files
-add_executable(${PROJECT_NAME}
+# link source files
+add_executable(
+    ${PROJECT_NAME}
     src/moderationservice/main.cpp
     src/moderationservice/server/server.cpp
     src/moderationservice/service/service.cpp
@@ -135,35 +101,32 @@ add_executable(${PROJECT_NAME}
     src/moderationservice/service/word_checker.cpp
     src/moderationservice/service/text_processor.cpp
     src/moderationservice/model/constants.cpp
-    src/moderationservice/kafka/kafkaclient.cpp
-)
+    src/moderationservice/kafka/kafkaclient.cpp)
 
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        ${GENPROTO_LIB}
-        gRPC::grpc++
-        gRPC::grpc++_reflection
-        protobuf::libprotobuf
-        ICU::uc
-        ICU::i18n  
-        ICU::data
-        tsl::hat_trie
-        Threads::Threads
-        RdKafka::rdkafka
-        RdKafka::rdkafka++
-        libpqxx::pqxx
-)
+target_link_libraries(
+    ${PROJECT_NAME}
+    PRIVATE ${GENPROTO_LIB}
+            gRPC::grpc++
+            gRPC::grpc++_reflection
+            protobuf::libprotobuf
+            ICU::uc
+            ICU::i18n
+            ICU::data
+            tsl::hat_trie
+            Threads::Threads
+            RdKafka::rdkafka
+            RdKafka::rdkafka++
+            libpqxx::pqxx)
 
 if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE U_STATIC_IMPLEMENTATION)
 endif()
 
-set(PROJECT_SOURCE_DIRS
-    ${PROJECT_SOURCE_DIR}/src/moderationservice
-    ${PROJECT_SOURCE_DIR}/include
-)
+set(PROJECT_SOURCE_DIRS ${PROJECT_SOURCE_DIR}/src/moderationservice ${PROJECT_SOURCE_DIR}/include)
 
-file(GLOB_RECURSE PROJECT_SOURCE_FILES
+file(
+    GLOB_RECURSE
+    PROJECT_SOURCE_FILES
     "${PROJECT_SOURCE_DIR}/src/moderationservice/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/moderationservice/*.cc"
     "${PROJECT_SOURCE_DIR}/src/moderationservice/*.cxx"
@@ -173,8 +136,7 @@ file(GLOB_RECURSE PROJECT_SOURCE_FILES
     "${PROJECT_SOURCE_DIR}/include/*.cc"
     "${PROJECT_SOURCE_DIR}/include/*.cxx"
     "${PROJECT_SOURCE_DIR}/include/*.h"
-    "${PROJECT_SOURCE_DIR}/include/*.hpp"
-)
+    "${PROJECT_SOURCE_DIR}/include/*.hpp")
 
 # ============================================================================
 # LINTING SECTION - Temporarily allow system PATH for finding linting tools
@@ -182,79 +144,81 @@ file(GLOB_RECURSE PROJECT_SOURCE_FILES
 set(_OLD_CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH ${CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH})
 set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH TRUE)
 
+option(ENABLE_CLANG_TIDY "Enable clang-tidy analysis during build" OFF)
+
+if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+    if(CLANG_TIDY_EXE)
+        message(STATUS "Found clang-tidy: ${CLANG_TIDY_EXE}")
+        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};-p=${CMAKE_BINARY_DIR}")
+    else()
+        message(STATUS "clang-tidy not found, disabling analysis")
+    endif()
+endif()
+
 find_program(CPPCHECK_EXE NAMES cppcheck)
 if(CPPCHECK_EXE)
-    add_custom_target(cppcheck
-        COMMAND ${CPPCHECK_EXE}
-            --enable=warning,style,performance,portability
-            --inline-suppr
-            --suppress=*:${CMAKE_BINARY_DIR}/generated/*
-            -I${PROJECT_SOURCE_DIR}/include
-            -I${PROJECT_SOURCE_DIR}/src/moderationservice
-            --library=gnu
-            ${PROJECT_SOURCE_DIRS}
+    add_custom_target(
+        cppcheck
+        COMMAND
+            ${CPPCHECK_EXE} --enable=warning,style,performance,portability --inline-suppr
+            --suppress=*:${CMAKE_BINARY_DIR}/generated/* -I${PROJECT_SOURCE_DIR}/include
+            -I${PROJECT_SOURCE_DIR}/src/moderationservice --library=gnu ${PROJECT_SOURCE_DIRS}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running cppcheck"
-        VERBATIM
-    )
+        VERBATIM)
 else()
     message(STATUS "cppcheck not found; 'cppcheck' target will not be created")
 endif()
 
 find_program(CPPLINT_EXE NAMES cpplint)
 if(CPPLINT_EXE)
-    add_custom_target(cpplint
-        COMMAND ${CPPLINT_EXE}
-            --recursive
-            --filter=-legal/copyright
-            ${PROJECT_SOURCE_DIRS}
+    add_custom_target(
+        cpplint
+        COMMAND ${CPPLINT_EXE} --recursive --filter=-legal/copyright ${PROJECT_SOURCE_DIRS}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running cpplint"
-        VERBATIM
-    )
+        VERBATIM)
 else()
     message(STATUS "cpplint not found; 'cpplint' target will not be created")
 endif()
 
 find_program(CLANG_FORMAT_EXE NAMES clang-format)
 if(CLANG_FORMAT_EXE)
-    add_custom_target(clang-format
+    add_custom_target(
+        clang-format
         COMMAND ${CLANG_FORMAT_EXE} -i ${PROJECT_SOURCE_FILES}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Formatting sources with clang-format"
-        VERBATIM
-    )
+        VERBATIM)
 
-    add_custom_target(clang-check-format
+    add_custom_target(
+        clang-check-format
         COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${PROJECT_SOURCE_FILES}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Checking clang-format compliance"
-        VERBATIM
-    )
+        VERBATIM)
 else()
     message(STATUS "clang-format not found; 'clang-format' targets will not be created")
 endif()
 
 find_program(CMAKE_FORMAT_EXE NAMES cmake-format)
 if(CMAKE_FORMAT_EXE)
-    file(GLOB_RECURSE CMAKE_FILES
-        "${PROJECT_SOURCE_DIR}/CMakeLists.txt"
-        "${PROJECT_SOURCE_DIR}/*.cmake"
-    )
+    set(CMAKE_FILES "${PROJECT_SOURCE_DIR}/CMakeLists.txt")
 
-    add_custom_target(cmake-format
+    add_custom_target(
+        cmake-format
         COMMAND ${CMAKE_FORMAT_EXE} -i ${CMAKE_FILES}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Formatting CMake files with cmake-format"
-        VERBATIM
-    )
+        VERBATIM)
 
-    add_custom_target(cmake-format-check
+    add_custom_target(
+        cmake-format-check
         COMMAND ${CMAKE_FORMAT_EXE} --check ${CMAKE_FILES}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Checking cmake-format compliance"
-        VERBATIM
-    )
+        VERBATIM)
 else()
     message(STATUS "cmake-format not found; 'cmake-format' targets will not be created")
 endif()
@@ -270,40 +234,40 @@ if(CLANG_FORMAT_EXE)
     list(APPEND AVAILABLE_LINTERS "clang-format")
 endif()
 
-if(CPPCHECK_EXE AND CPPLINT_EXE AND CLANG_FORMAT_EXE AND
-   NOT CPPCHECK_EXE STREQUAL "CPPCHECK_EXE-NOTFOUND" AND
-   NOT CPPLINT_EXE STREQUAL "CPPLINT_EXE-NOTFOUND" AND
-   NOT CLANG_FORMAT_EXE STREQUAL "CLANG_FORMAT_EXE-NOTFOUND")
-    
-    add_custom_target(lint-all
+if(CPPCHECK_EXE
+   AND CPPLINT_EXE
+   AND CLANG_FORMAT_EXE
+   AND NOT CPPCHECK_EXE STREQUAL "CPPCHECK_EXE-NOTFOUND"
+   AND NOT CPPLINT_EXE STREQUAL "CPPLINT_EXE-NOTFOUND"
+   AND NOT CLANG_FORMAT_EXE STREQUAL "CLANG_FORMAT_EXE-NOTFOUND")
+
+    add_custom_target(
+        lint-all
         COMMAND ${CMAKE_COMMAND} -E echo "=== Running clang-format check ==="
         COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${PROJECT_SOURCE_FILES}
         COMMAND ${CMAKE_COMMAND} -E echo "=== Running cppcheck ==="
-        COMMAND ${CPPCHECK_EXE}
-            --enable=warning,style,performance,portability
-            --inline-suppr
-            --suppress=*:${CMAKE_BINARY_DIR}/generated/*
-            -I${PROJECT_SOURCE_DIR}/include
-            -I${PROJECT_SOURCE_DIR}/src/moderationservice
-            --library=gnu
-            ${PROJECT_SOURCE_DIR}/src/moderationservice
-            ${PROJECT_SOURCE_DIR}/include
+        COMMAND
+            ${CPPCHECK_EXE} --enable=warning,style,performance,portability --inline-suppr
+            --suppress=*:${CMAKE_BINARY_DIR}/generated/* -I${PROJECT_SOURCE_DIR}/include
+            -I${PROJECT_SOURCE_DIR}/src/moderationservice --library=gnu
+            ${PROJECT_SOURCE_DIR}/src/moderationservice ${PROJECT_SOURCE_DIR}/include
         COMMAND ${CMAKE_COMMAND} -E echo ""
         COMMAND ${CMAKE_COMMAND} -E echo "=== Running cpplint ==="
-        COMMAND ${CPPLINT_EXE}
-            --recursive
+        COMMAND
+            ${CPPLINT_EXE} --recursive
             --filter=-legal/copyright,-whitespace/indent,-whitespace/comments,-build/include_order,-build/include_subdir
-            --linelength=120
-            ${PROJECT_SOURCE_DIR}/src/moderationservice
+            --linelength=120 ${PROJECT_SOURCE_DIR}/src/moderationservice
             ${PROJECT_SOURCE_DIR}/include
         COMMAND ${CMAKE_COMMAND} -E echo ""
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running all linters"
-        VERBATIM
-    )
+        VERBATIM)
     message(STATUS "Created 'lint-all' target with: ${AVAILABLE_LINTERS}")
 else()
-    message(STATUS "Not all linters found (available: ${AVAILABLE_LINTERS}); 'lint-all' target will not be created")
+    message(
+        STATUS
+            "Not all linters found (available: ${AVAILABLE_LINTERS}); 'lint-all' target will not be created"
+    )
 endif()
 
 # Restore the original setting to keep Conan dependencies isolated
@@ -312,17 +276,14 @@ set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH ${_OLD_CMAKE_FIND_USE_SYSTEM_ENVIRONM
 # END LINTING SECTION
 # ============================================================================
 
-#link header files
-target_include_directories(${PROJECT_NAME} 
-    PUBLIC 
-        ${PROJECT_SOURCE_DIR}/include
-    PRIVATE
-        ${PROJECT_SOURCE_DIR}/src/moderationservice
-        ${PROJECT_SOURCE_DIR}/src/moderationservice/repository
-        ${PROJECT_SOURCE_DIR}/src/moderationservice/handler
-        ${PROJECT_SOURCE_DIR}/src/moderationservice/service 
-        ${PROJECT_SOURCE_DIR}/src/moderationservice/model
-        ${PROJECT_SOURCE_DIR}/src/moderationservice/kafka
-
-        ${GENPROTO_DIR}
-)
+# link header files
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}/include
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/moderationservice
+            ${PROJECT_SOURCE_DIR}/src/moderationservice/repository
+            ${PROJECT_SOURCE_DIR}/src/moderationservice/handler
+            ${PROJECT_SOURCE_DIR}/src/moderationservice/service
+            ${PROJECT_SOURCE_DIR}/src/moderationservice/model
+            ${PROJECT_SOURCE_DIR}/src/moderationservice/kafka
+            ${GENPROTO_DIR})

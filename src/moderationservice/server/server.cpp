@@ -6,7 +6,7 @@
 #include <utility>
 
 Server::Server(std::string server_address, std::shared_ptr<grpc::Service> service,
-               std::string server_name)
+               const std::string& server_name)
     : server_address_(server_address), service_(service), server_name_(server_name) {
 
     this->interceptor_creators_.emplace_back(std::make_unique<LoggerInterceptorFactory>());

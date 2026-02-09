@@ -42,7 +42,7 @@ void ProducerDeliveryReportCb::dr_cb(RdKafka::Message& message) {
     }
 }
 
-KafkaProducer::KafkaProducer(const KafkaConfig& config) {
+KafkaProducer::KafkaProducer(const KafkaConfig& config) : config_(config) {
     std::string errorString;
 
     RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
