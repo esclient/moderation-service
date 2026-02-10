@@ -30,10 +30,10 @@ class KafkaClient {
     explicit KafkaClient(const KafkaConfig& config);
     ~KafkaClient();
 
-    void Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t,
+    virtual void Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t,
                                        const std::string&, moderation::ObjectType)>
                         result_callback);
-    bool SendRequestAsync(const moderation::ModerateObjectRequest& request);
+    virtual bool SendRequestAsync(const moderation::ModerateObjectRequest& request);
     void StartConsumer();
     void StopConsumer();
     void Flush();
