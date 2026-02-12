@@ -1,8 +1,8 @@
 #pragma once
 
-#include "include/config/config.hpp"
-#include "moderationservice/kafka/kafkaclient.hpp"
-#include "moderation.ph.h"
+#include "config/config.hpp"
+#include "kafka/kafkaclient.hpp"
+#include "moderation.pb.h"
 #include <functional>
 #include <vector>
 

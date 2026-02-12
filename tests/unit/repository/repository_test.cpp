@@ -1,5 +1,5 @@
-#include "tests/mocks/fake_moderation_repository.hpp"
-#include "moderationservice/repository/repository.hpp"
+#include "mocks/fake_moderation_repository.hpp"
+#include "repository/repository.hpp"
 #include <chrono>
 #include <gtest/gtest.h>
 #include <string>

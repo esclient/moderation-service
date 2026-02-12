@@ -1,6 +1,6 @@
 #pragma once
 
-#include "moderationservice/repository/repository.hpp"
+#include "repository/repository.hpp"
 #include "moderation.pb.h"
 #include <chrono>
 #include <string>

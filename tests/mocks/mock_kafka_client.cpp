@@ -1,5 +1,4 @@
-#include "tests/mocks/mock_kafka_client.hpp"
-#include "mock_kafka_client.hpp"
+#include "mocks/mock_kafka_client.hpp"
 
 MockKafkaClient::MockKafkaClient(const KafkaConfig& config) : KafkaClient(config) {}
 

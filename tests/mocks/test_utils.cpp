@@ -1,4 +1,4 @@
-#include "tests/mocks/test_utils.hpp"
+#include "mocks/test_utils.hpp"
 
 namespace test_utils {
 
@@ -26,11 +26,11 @@ moderation::ModerateObjectRequest MakeRequest(int64_t id, const std::string& tex
     return request;
 }
 
-moderation::ModerateObjectResponse MakeResponse(bool success){
+moderation::ModerateObjectResponse MakeResponse(bool success) {
     moderation::ModerateObjectResponse response;
     response.set_success(success);
     
-    return success;
+    return response;
 }
 
 } //namespace test_utils

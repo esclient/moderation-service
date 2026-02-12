@@ -1,4 +1,4 @@
-#include "moderationservice/service/text_normalization.hpp"
+#include "service/text_normalization.hpp"
 #include <gtest/gtest.h>
 
 TEST(TextNormalization, EmptyString) {
@@ -6,7 +6,7 @@ TEST(TextNormalization, EmptyString) {
 }
 
 TEST(TextNormalization, Lowercase){
-    EXPECT_EQ(TextNormalization::TextNormalization("HELLO"));
+    EXPECT_EQ(TextNormalization::TextNormalization("HELLO"), "hello");
 }
 
 TEST(WhitespaceNormalization, CollapseSpaces) {
