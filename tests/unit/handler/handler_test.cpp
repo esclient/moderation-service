@@ -10,7 +10,6 @@
 #include <memory>
 
 TEST(ModerationHandlerTest, ModerateObject_EmptyText_InvalidArgument) {
-    auto repo = std::make_shared<FakeModerationRepository>();
     KafkaConfig config{};
     config.brokers = "test";
     config.request_topic = "request";
@@ -19,7 +18,9 @@ TEST(ModerationHandlerTest, ModerateObject_EmptyText_InvalidArgument) {
     config.max_retries = 1;
     config.retry_backoff_ms = 100;
     config.enable_ssl = false;
-    auto kafka = std::make_shared<MockKafkaClient>(config);
+
+    std::shared_ptr<ModerationRepository> repo = std::make_shared<FakeModerationRepository>();
+    std::shared_ptr<KafkaClient> kafka = std::make_shared<MockKafkaClient>(config);
     auto service = std::make_shared<ModerationService>(repo, kafka);
     ModerationHandler handler(service);
 
@@ -34,7 +35,6 @@ TEST(ModerationHandlerTest, ModerateObject_EmptyText_InvalidArgument) {
 }
 
 TEST(ModerationHandlerTest, ModerateObject_ZeroId_InvalidArgument) {
-    auto repo = std::make_shared<FakeModerationRepository>();
     KafkaConfig config{};
     config.brokers = "test";
     config.request_topic = "r";
@@ -43,7 +43,9 @@ TEST(ModerationHandlerTest, ModerateObject_ZeroId_InvalidArgument) {
     config.max_retries = 1;
     config.retry_backoff_ms = 100;
     config.enable_ssl = false;
-    auto kafka = std::make_shared<MockKafkaClient>(config);
+    
+    std::shared_ptr<ModerationRepository> repo = std::make_shared<FakeModerationRepository>();
+    std::shared_ptr<KafkaClient> kafka = std::make_shared<MockKafkaClient>(config);
     auto service = std::make_shared<ModerationService>(repo, kafka);
     ModerationHandler handler(service);
 

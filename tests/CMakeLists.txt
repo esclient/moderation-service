@@ -10,35 +10,77 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-set(TEST_DEPS genproto_lib Threads::Threads)
-
-find_package(Protobuf REQUIRED CONFIG)
-find_package(gRPC REQUIRED CONFIG)
-find_package(ICU REQUIRED COMPONENTS uc i18n data)
-find_package(RdKafka REQUIRED)
-find_package(Threads REQUIRED)
-find_package(libpqxx REQUIRED)
-
-
-add_executable(fake_repository_test unit/repository/repository_test.cpp
-               mocks/fake_moderation_repository.cpp)
-target_include_directories(fake_repository_test PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/src/moderationservice
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/repository
-    ${CMAKE_SOURCE_DIR}/tests
-    ${GENPROTO_DIR})
-target_link_libraries(fake_repository_test PRIVATE GTest::gtest_main ${TEST_DEPS})
-add_test(NAME FakeRepositoryTest COMMAND fake_repository_test)
-
-PRIVATE ${CMAKE_SOURCE_DIR}/src/moderationservice ${CMAKE_SOURCE_DIR}/include ${GENPROTO_DIR}
-
-set(SERVICE_TEST_SOURCES
-    src/moderationservice/service/text_normalization.cpp
-    src/moderationservice/service/leetspeak_normalization.cpp
-    src/moderationservice/service/word_checker.cpp
-    src/moderationservice/service/text_processor.cpp
-    src/moderationservice/model/constants.cpp
+set(TEST_DEPS 
+    genproto_lib 
+    Threads::Threads
 )
 
-add_executable(text_normalization_test unit/service/text_normalization_test.cpp)
+set(SERVICE_TEST_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/moderationservice/service/text_normalization.cpp
+    ${CMAKE_SOURCE_DIR}/src/moderationservice/service/leetspeak_normalization.cpp
+    ${CMAKE_SOURCE_DIR}/src/moderationservice/service/word_checker.cpp
+    ${CMAKE_SOURCE_DIR}/src/moderationservice/service/text_processor.cpp
+    ${CMAKE_SOURCE_DIR}/src/moderationservice/model/constants.cpp
+)
+
+function(add_service_test TEST_NAME)
+    add_executable(${TEST_NAME} ${ARGN} ${SERVICE_TEST_SOURCES})
+
+    target_include_directories(${TEST_NAME} PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/moderationservice 
+    ${CMAKE_SOURCE_DIR}/include 
+    ${CMAKE_SOURCE_DIR}/tests
+    ${GENPROTO_DIR}
+    )
+
+    target_link_libraries(${TEST_NAME} PRIVATE 
+        GTest::gtest_main 
+        ${GENPROTO_LIB} 
+        ICU::uc ICU::i18n 
+        ICU::data 
+        tsl::hat_trie
+        libpqxx::pqxx
+        RdKafka::rdkafka
+        RdKafka::rdkafka++
+        ${TEST_DEPS}
+    )
+    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+endfunction()
+
+# ============================================================================
+# Tests
+# ============================================================================
+add_service_test(fake_repository_test 
+    ${CMAKE_CURRENT_SOURCE_DIR}/unit/repository/repository_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mocks/fake_moderation_repository.cpp
+)
+
+add_service_test(text_normalization_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/unit/service/text_normalization_test.cpp
+)
+
+add_service_test(word_checker_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/unit/service/word_checker_test.cpp
+)
+
+add_service_test(text_processor_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/unit/service/text_processor_test.cpp
+)
+
+add_service_test(moderation_service_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/unit/service/moderation_service_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mocks/fake_moderation_repository.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mocks/mock_kafka_client.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mocks/test_utils.cpp
+    ${CMAKE_SOURCE_DIR}/src/moderationservice/kafka/kafkaclient.cpp 
+)
+
+add_service_test(handler_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/unit/handler/handler_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/moderationservice/handler/handler.cpp
+    ${CMAKE_SOURCE_DIR}/src/moderationservice/service/service.cpp
+    ${CMAKE_SOURCE_DIR}/src/moderationservice/kafka/kafkaclient.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/mocks/fake_moderation_repository.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mocks/mock_kafka_client.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mocks/test_utils.cpp
+)

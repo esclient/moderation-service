@@ -287,3 +287,5 @@ target_include_directories(
             ${PROJECT_SOURCE_DIR}/src/moderationservice/model
             ${PROJECT_SOURCE_DIR}/src/moderationservice/kafka
             ${GENPROTO_DIR})
+
+add_subdirectory(tests)

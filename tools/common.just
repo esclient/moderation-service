@@ -81,3 +81,6 @@ install-dev-tools:
 upgrade-python-tools:
     pipx upgrade cpplint
     pipx upgrade cmakelang
+
+test:
+    cd build && ctest --output-on-failure

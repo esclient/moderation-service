@@ -9,7 +9,6 @@
 class ModerationServiceTest : public ::testing::Test {
     protected:
     void SetUp() override {
-        repo_ = std::make_shared<FakeModerationRepository>();
         KafkaConfig config{};
         config.brokers = "test";
         config.request_topic = "request";

@@ -24,4 +24,4 @@ private:
                     moderation::ObjectType)> callback_;
     std::vector<moderation::ModerateObjectRequest> sent_requests_;
     bool send_result_ = true;
-}
+};
