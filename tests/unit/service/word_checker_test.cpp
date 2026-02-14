@@ -30,3 +30,10 @@ TEST_F(WordCheckerTest, WordCheckingOverThreshold) {
     std::vector<std::string> many_bad = {"gay", "gay", "gay", "gay", "gay"};
     EXPECT_TRUE(WordChecker::WordChecking(many_bad));
 }
+
+
+TEST_F(WordCheckerTest, Tokenize_SpecialCharacters) {
+    auto tokens = WordChecker::Tokenize("@#$%");
+    
+    EXPECT_TRUE(tokens.empty());
+}

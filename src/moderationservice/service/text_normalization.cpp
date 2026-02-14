@@ -73,7 +73,6 @@ std::string RepetitionNormalization(const std::string& textN) {
     icu::UnicodeString result;
 
     UChar32 prevChar = 0;
-    int repeatCount = 0;
 
     if (text.length() == 0) {
         text = icu::UnicodeString(textN.c_str(), textN.length(), "UTF-8");
@@ -82,16 +81,9 @@ std::string RepetitionNormalization(const std::string& textN) {
     for (int32_t i = 0; i < text.length(); i++) {
         UChar32 c = text.char32At(i);
 
-        if (c == prevChar) {
-            repeatCount++;
-
-            if (repeatCount < 2) {
-                result.append(c);
-            }
-        } else {
+        if (c != prevChar) {  
             result.append(c);
             prevChar = c;
-            repeatCount = 0;
         }
 
         if (U16_IS_LEAD(text.charAt(i)))

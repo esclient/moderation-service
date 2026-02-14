@@ -57,3 +57,112 @@ TEST(ModerationHandlerTest, ModerateObject_ZeroId_InvalidArgument) {
     EXPECT_FALSE(status.ok());
     EXPECT_FALSE(response.success());
 }
+
+TEST(ModerationHandlerTest, ModerateObject_ValidRequest_ReturnsOk) {
+    KafkaConfig config{};
+    config.brokers = "test";
+    config.request_topic = "request";
+    config.result_topic = "result";
+    config.consumer_group_id = "cg";
+    config.max_retries = 1;
+    config.retry_backoff_ms = 100;
+    config.enable_ssl = false;
+    
+    auto repo = std::make_shared<FakeModerationRepository>();
+    auto kafka = std::make_shared<MockKafkaClient>(config);
+    kafka->SetSendResult(true); 
+    
+    auto service = std::make_shared<ModerationService>(repo, kafka);
+    ModerationHandler handler(service);
+    
+    auto request = test_utils::MakeRequest(123, "hello world");
+    moderation::ModerateObjectResponse response;
+    grpc::ServerContext context;
+    
+    grpc::Status status = handler.ModerateObject(&context, &request, &response);
+    
+    EXPECT_TRUE(status.ok());
+    EXPECT_TRUE(response.success());
+}
+
+TEST(ModerationHandlerTest, ModerateObject_LongText_ReturnsOk) {
+    KafkaConfig config{};
+    config.brokers = "test";
+    config.request_topic = "request";
+    config.result_topic = "result";
+    config.consumer_group_id = "cg";
+    config.max_retries = 1;
+    config.retry_backoff_ms = 100;
+    config.enable_ssl = false;
+    
+    auto repo = std::make_shared<FakeModerationRepository>();
+    auto kafka = std::make_shared<MockKafkaClient>(config);
+    kafka->SetSendResult(true);
+    
+    auto service = std::make_shared<ModerationService>(repo, kafka);
+    ModerationHandler handler(service);
+    
+    std::string long_text(1000, 'a');
+    auto request = test_utils::MakeRequest(456, long_text);
+    moderation::ModerateObjectResponse response;
+    grpc::ServerContext context;
+    
+    grpc::Status status = handler.ModerateObject(&context, &request, &response);
+    
+    EXPECT_TRUE(status.ok());
+    EXPECT_TRUE(response.success());
+}
+
+TEST(ModerationHandlerTest, ModerateObject_KafkaFailure_ReturnsError) {
+    KafkaConfig config{};
+    config.brokers = "test";
+    config.request_topic = "request";
+    config.result_topic = "result";
+    config.consumer_group_id = "cg";
+    config.max_retries = 1;
+    config.retry_backoff_ms = 100;
+    config.enable_ssl = false;
+    
+    auto repo = std::make_shared<FakeModerationRepository>();
+    auto kafka = std::make_shared<MockKafkaClient>(config);
+    kafka->SetSendResult(false);  
+    
+    auto service = std::make_shared<ModerationService>(repo, kafka);
+    ModerationHandler handler(service);
+    
+    auto request = test_utils::MakeRequest(789, "test text");
+    moderation::ModerateObjectResponse response;
+    grpc::ServerContext context;
+    
+    grpc::Status status = handler.ModerateObject(&context, &request, &response);
+    
+    EXPECT_FALSE(status.ok());
+    EXPECT_FALSE(response.success());
+}
+
+TEST(ModerationHandlerTest, ModerateObject_SpecialCharacters_ReturnsOk) {
+    KafkaConfig config{};
+    config.brokers = "test";
+    config.request_topic = "request";
+    config.result_topic = "result";
+    config.consumer_group_id = "cg";
+    config.max_retries = 1;
+    config.retry_backoff_ms = 100;
+    config.enable_ssl = false;
+    
+    auto repo = std::make_shared<FakeModerationRepository>();
+    auto kafka = std::make_shared<MockKafkaClient>(config);
+    kafka->SetSendResult(true);
+    
+    auto service = std::make_shared<ModerationService>(repo, kafka);
+    ModerationHandler handler(service);
+    
+    auto request = test_utils::MakeRequest(999, "Hello 👋 世界 @#$%");
+    moderation::ModerateObjectResponse response;
+    grpc::ServerContext context;
+    
+    grpc::Status status = handler.ModerateObject(&context, &request, &response);
+    
+    EXPECT_TRUE(status.ok());
+    EXPECT_TRUE(response.success());
+}
