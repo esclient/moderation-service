@@ -19,7 +19,7 @@ TEST(ModerationHandlerTest, ModerateObject_EmptyText_InvalidArgument) {
     config.retry_backoff_ms = 100;
     config.enable_ssl = false;
 
-    std::shared_ptr<ModerationRepository> repo = std::make_shared<FakeModerationRepository>();
+    std::shared_ptr<IModerationRepository> repo = std::make_shared<FakeModerationRepository>();
     std::shared_ptr<KafkaClient> kafka = std::make_shared<MockKafkaClient>(config);
     auto service = std::make_shared<ModerationService>(repo, kafka);
     ModerationHandler handler(service);
@@ -44,7 +44,7 @@ TEST(ModerationHandlerTest, ModerateObject_ZeroId_InvalidArgument) {
     config.retry_backoff_ms = 100;
     config.enable_ssl = false;
     
-    std::shared_ptr<ModerationRepository> repo = std::make_shared<FakeModerationRepository>();
+    std::shared_ptr<IModerationRepository> repo = std::make_shared<FakeModerationRepository>();
     std::shared_ptr<KafkaClient> kafka = std::make_shared<MockKafkaClient>(config);
     auto service = std::make_shared<ModerationService>(repo, kafka);
     ModerationHandler handler(service);

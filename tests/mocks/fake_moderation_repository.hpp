@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "repository/imoderation_repository.hpp"
+#include "repository/moderation_record.hpp"
 
 
 class FakeModerationRepository : public IModerationRepository

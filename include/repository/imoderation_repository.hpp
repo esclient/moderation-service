@@ -1,9 +1,8 @@
 #pragma once
 
-#include "moderation.pb.h"
 #include <chrono>
 #include <string>
-#include "repository/repository.hpp"
+#include "repository/moderation_record.hpp"
 
 class IModerationRepository {
     public:

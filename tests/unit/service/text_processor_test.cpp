@@ -6,7 +6,7 @@
 class TextProcessorTest : public ::testing::Test {
     protected:
     void SetUp() override { TextProcessingConstants::HashTrieMaps::InitializeForbiddenWords(); }
-}
+};
 
 TEST_F(TextProcessorTest, CleanTextReturnsFalse) {
     EXPECT_FALSE(TextProcessor::TextProcessing("clean normal text"));

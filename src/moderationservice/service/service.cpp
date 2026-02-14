@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 
-ModerationService::ModerationService(std::shared_ptr<ModerationRepository> repository,
+ModerationService::ModerationService(std::shared_ptr<IModerationRepository> repository,
                                      std::shared_ptr<KafkaClient> kafkaClient)
     : repository_(std::move(repository)), kafkaClient_(std::move(kafkaClient)) {
     TextProcessingConstants::HashTrieMaps::InitializeForbiddenWords();
