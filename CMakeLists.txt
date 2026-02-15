@@ -122,7 +122,8 @@ if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE U_STATIC_IMPLEMENTATION)
 endif()
 
-set(PROJECT_SOURCE_DIRS ${PROJECT_SOURCE_DIR}/src/moderationservice ${PROJECT_SOURCE_DIR}/include)
+set(PROJECT_SOURCE_DIRS ${PROJECT_SOURCE_DIR}/src/moderationservice ${PROJECT_SOURCE_DIR}/include
+                        ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/benchmark)
 
 file(
     GLOB_RECURSE
@@ -136,7 +137,13 @@ file(
     "${PROJECT_SOURCE_DIR}/include/*.cc"
     "${PROJECT_SOURCE_DIR}/include/*.cxx"
     "${PROJECT_SOURCE_DIR}/include/*.h"
-    "${PROJECT_SOURCE_DIR}/include/*.hpp")
+    "${PROJECT_SOURCE_DIR}/include/*.hpp"
+    "${PROJECT_SOURCE_DIR}/tests/*.cpp"
+    "${PROJECT_SOURCE_DIR}/tests/*.h"
+    "${PROJECT_SOURCE_DIR}/tests/*.hpp"
+    "${PROJECT_SOURCE_DIR}/benchmark/*.cpp"
+    "${PROJECT_SOURCE_DIR}/benchmark/*.h"
+    "${PROJECT_SOURCE_DIR}/benchmark/*.hpp")
 
 # ============================================================================
 # LINTING SECTION - Temporarily allow system PATH for finding linting tools
@@ -251,13 +258,15 @@ if(CPPCHECK_EXE
             --suppress=*:${CMAKE_BINARY_DIR}/generated/* -I${PROJECT_SOURCE_DIR}/include
             -I${PROJECT_SOURCE_DIR}/src/moderationservice --library=gnu
             ${PROJECT_SOURCE_DIR}/src/moderationservice ${PROJECT_SOURCE_DIR}/include
+            ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/benchmark
         COMMAND ${CMAKE_COMMAND} -E echo ""
         COMMAND ${CMAKE_COMMAND} -E echo "=== Running cpplint ==="
         COMMAND
             ${CPPLINT_EXE} --recursive
             --filter=-legal/copyright,-whitespace/indent,-whitespace/comments,-build/include_order,-build/include_subdir
             --linelength=120 ${PROJECT_SOURCE_DIR}/src/moderationservice
-            ${PROJECT_SOURCE_DIR}/include
+            ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/tests
+            ${PROJECT_SOURCE_DIR}/benchmark
         COMMAND ${CMAKE_COMMAND} -E echo ""
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running all linters"
@@ -289,3 +298,8 @@ target_include_directories(
             ${GENPROTO_DIR})
 
 add_subdirectory(tests)
+
+option(BUILD_BENCHMARKS "Build benchmark executables" OFF)
+if(BUILD_BENCHMARKS)
+    add_subdirectory(benchmark)
+endif()

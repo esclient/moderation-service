@@ -4,7 +4,7 @@
 #include <string>
 
 class TextProcessorTest : public ::testing::Test {
-    protected:
+  protected:
     void SetUp() override { TextProcessingConstants::HashTrieMaps::InitializeForbiddenWords(); }
 };
 
@@ -14,8 +14,7 @@ TEST_F(TextProcessorTest, CleanTextReturnsFalse) {
 
 TEST_F(TextProcessorTest, ManyForbiddenWordsReturnsTrue) {
     std::string bad;
-    for (int i = 0; i < 5; ++i) 
-    {
+    for (int i = 0; i < 5; ++i) {
         bad += "gay ";
     }
 

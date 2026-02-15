@@ -5,8 +5,8 @@
 #include <vector>
 
 class WordCheckerTest : public ::testing::Test {
-    protected:
-        void SetUp() override { TextProcessingConstants::HashTrieMaps::InitializeForbiddenWords(); }
+  protected:
+    void SetUp() override { TextProcessingConstants::HashTrieMaps::InitializeForbiddenWords(); }
 };
 
 TEST_F(WordCheckerTest, TokenizeSimple) {
@@ -22,7 +22,7 @@ TEST_F(WordCheckerTest, TokenizeEmpty) {
 }
 
 TEST_F(WordCheckerTest, WordCheckingUnderThreshold) {
-    std::vector<std::string> few_bad = { "hello", "gay", "world" };
+    std::vector<std::string> few_bad = {"hello", "gay", "world"};
     EXPECT_FALSE(WordChecker::WordChecking(few_bad));
 }
 
@@ -31,9 +31,8 @@ TEST_F(WordCheckerTest, WordCheckingOverThreshold) {
     EXPECT_TRUE(WordChecker::WordChecking(many_bad));
 }
 
-
 TEST_F(WordCheckerTest, Tokenize_SpecialCharacters) {
     auto tokens = WordChecker::Tokenize("@#$%");
-    
+
     EXPECT_TRUE(tokens.empty());
 }

@@ -8,5 +8,5 @@ Checks: >
 
 WarningsAsErrors: ''
 
-HeaderFilterRegex: '^(src|include)/'
+HeaderFilterRegex: '^(src|include|tests|benchmark)/'
 FormatStyle: file

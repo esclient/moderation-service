@@ -1,9 +1,9 @@
 #pragma once
 
-#include "repository/moderation_record.hpp"
 #include "config/config.hpp"
-#include "repository/imoderation_repository.hpp"
 #include "moderation.pb.h"
+#include "repository/imoderation_repository.hpp"
+#include "repository/moderation_record.hpp"
 #include <chrono>
 #include <memory>
 #include <optional>
@@ -11,8 +11,7 @@
 #include <string>
 #include <vector>
 
-
-class ModerationRepository : public IModerationRepository{
+class ModerationRepository : public IModerationRepository {
   public:
     explicit ModerationRepository(const std::string& database_url);
     ~ModerationRepository();

@@ -3,10 +3,10 @@
 #include "kafka/kafkaclient.hpp"
 #include "model/constants.hpp"
 #include "moderation.pb.h"
+#include "repository/imoderation_repository.hpp"
 #include "repository/moderation_record.hpp"
 #include "repository/repository.hpp"
 #include "service/text_processor.hpp"
-#include "repository/imoderation_repository.hpp"
 #include <memory>
 #include <mutex>
 #include <string>

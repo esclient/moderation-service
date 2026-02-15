@@ -89,3 +89,10 @@ test:
     ./build/tests/Release/text_normalization_test.exe
     ./build/tests/Release/text_processor_test.exe
     ./build/tests/Release/word_checker_test.exe
+
+benchmark:
+    cmake -B build -DBUILD_BENCHMARKS=ON
+    cmake --build build --target text_processing_benchmark --config Release
+    cmake --build build --target text_processing_benchmark --config Release && \
+    (./build/benchmark/Release/text_processing_benchmark.exe || \
+     ./build/benchmark/text_processing_benchmark)

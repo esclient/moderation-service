@@ -4,6 +4,7 @@
     icu/77.1
     librdkafka/2.12.1
     libpqxx/7.10.3
+    benchmark/1.8.3
 
 [generators]
     CMakeDeps
@@ -23,3 +24,5 @@
     librdkafka/*:shared=False
     librdkafka/*:ssl=True
     librdkafka/*:sasl=True
+    benchmark/*:shared=False
+    benchmark/*:enable_lto=True

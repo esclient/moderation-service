@@ -4,10 +4,10 @@
 #include <gtest/gtest.h>
 #include <string>
 
-TEST(FakeModerationRepository, SaveStoresRecord){
+TEST(FakeModerationRepository, SaveStoresRecord) {
     FakeModerationRepository repo;
     ModerationRecord record{};
-    
+
     record.object_id = 42;
     record.object_type = moderation::OBJECT_TYPE_COMMENT_TEXT;
     record.text = "hello";
@@ -23,7 +23,7 @@ TEST(FakeModerationRepository, SaveStoresRecord){
     EXPECT_TRUE(repo.GetStoredRecords()[0].is_flagged);
 }
 
-TEST(FakeModerationRepository, SaveMultipleRecords){
+TEST(FakeModerationRepository, SaveMultipleRecords) {
     FakeModerationRepository repo;
     ModerationRecord aRecord{};
     aRecord.object_id = 1;
@@ -41,7 +41,7 @@ TEST(FakeModerationRepository, SaveMultipleRecords){
     EXPECT_EQ(2, repo.GetStoredRecords()[1].object_id);
 }
 
-TEST(FakeModerationRepository, SetSaveResultFalse){
+TEST(FakeModerationRepository, SetSaveResultFalse) {
     FakeModerationRepository repo;
     repo.SetSaveResult(false);
     ModerationRecord record{};
@@ -63,7 +63,7 @@ TEST(FakeModerationRepository, ClearEmptiesStored) {
 
 TEST(FakeModerationRepository, SaveStoresReasonAndType) {
     FakeModerationRepository repo;
-    
+
     ModerationRecord record;
     record.object_id = 42;
     record.object_type = moderation::OBJECT_TYPE_COMMENT_TEXT;
@@ -71,10 +71,10 @@ TEST(FakeModerationRepository, SaveStoresReasonAndType) {
     record.is_flagged = true;
     record.moderated_at = std::chrono::system_clock::now();
     record.reason = "contains forbidden words";
-    
+
     EXPECT_TRUE(repo.SaveModerationResult(record));
     ASSERT_EQ(1u, repo.GetStoredRecords().size());
-    
+
     const auto& stored = repo.GetStoredRecords()[0];
     EXPECT_EQ(42, stored.object_id);
     EXPECT_EQ(moderation::OBJECT_TYPE_COMMENT_TEXT, stored.object_type);
@@ -85,44 +85,44 @@ TEST(FakeModerationRepository, SaveStoresReasonAndType) {
 
 TEST(FakeModerationRepository, SaveWhenSetSaveResultFalse_DoesNotStore) {
     FakeModerationRepository repo;
-    
-    repo.SetSaveResult(false); 
-    
+
+    repo.SetSaveResult(false);
+
     ModerationRecord record;
     record.object_id = 99;
     record.text = "test";
     record.is_flagged = true;
-    
-    EXPECT_FALSE(repo.SaveModerationResult(record));  
-    EXPECT_TRUE(repo.GetStoredRecords().empty());     
+
+    EXPECT_FALSE(repo.SaveModerationResult(record));
+    EXPECT_TRUE(repo.GetStoredRecords().empty());
 }
 
 TEST(FakeModerationRepository, MultipleSavesWithMixedResults) {
     FakeModerationRepository repo;
-    
+
     ModerationRecord record1;
     record1.object_id = 1;
     record1.text = "first";
-    
+
     ModerationRecord record2;
     record2.object_id = 2;
     record2.text = "second";
-    
+
     ModerationRecord record3;
     record3.object_id = 3;
     record3.text = "third";
-    
+
     EXPECT_TRUE(repo.SaveModerationResult(record1));
     EXPECT_EQ(1u, repo.GetStoredRecords().size());
-    
+
     repo.SetSaveResult(false);
     EXPECT_FALSE(repo.SaveModerationResult(record2));
-    EXPECT_EQ(1u, repo.GetStoredRecords().size());  
-    
+    EXPECT_EQ(1u, repo.GetStoredRecords().size());
+
     repo.SetSaveResult(true);
     EXPECT_TRUE(repo.SaveModerationResult(record3));
     EXPECT_EQ(2u, repo.GetStoredRecords().size());
-    
+
     EXPECT_EQ(1, repo.GetStoredRecords()[0].object_id);
     EXPECT_EQ(3, repo.GetStoredRecords()[1].object_id);
 }

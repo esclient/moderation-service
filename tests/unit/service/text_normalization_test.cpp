@@ -5,7 +5,7 @@ TEST(TextNormalization, EmptyString) {
     EXPECT_TRUE(TextNormalization::TextNormalization("").empty());
 }
 
-TEST(TextNormalization, Lowercase){
+TEST(TextNormalization, Lowercase) {
     EXPECT_EQ(TextNormalization::TextNormalization("HELLO"), "hello");
 }
 
@@ -24,7 +24,6 @@ TEST(RepetitionNormalization, ReduceRepeats) {
 TEST(RepetitionNormalization, TwoDifferentChars) {
     EXPECT_EQ(TextNormalization::RepetitionNormalization("aab"), "ab");
 }
-
 
 TEST(RepetitionNormalization, ReduceSpamPatterns) {
     EXPECT_EQ(TextNormalization::RepetitionNormalization("loooook"), "lok");
@@ -59,7 +58,6 @@ TEST(RepetitionNormalization, SingleChar) {
     EXPECT_EQ(TextNormalization::RepetitionNormalization("x"), "x");
 }
 
-
 TEST(RepetitionNormalization, NoRepeatsStaysUnchanged) {
     EXPECT_EQ(TextNormalization::RepetitionNormalization("abc"), "abc");
     EXPECT_EQ(TextNormalization::RepetitionNormalization("123"), "123");
@@ -76,11 +74,11 @@ TEST(InvisibleCharacterNormalization, MultipleInvisibleChars) {
     // Zero-width space (U+200B)
     std::string text1 = "hello\u200Bworld";
     EXPECT_EQ(TextNormalization::InvisibleCharacterNormalization(text1), "helloworld");
-    
+
     // Zero-width non-joiner (U+200C)
     std::string text2 = "test\u200Ctext";
     EXPECT_EQ(TextNormalization::InvisibleCharacterNormalization(text2), "testtext");
-    
+
     // Soft hyphen (U+00AD)
     std::string text3 = "soft\u00ADhyphen";
     EXPECT_EQ(TextNormalization::InvisibleCharacterNormalization(text3), "softhyphen");

@@ -81,7 +81,7 @@ std::string RepetitionNormalization(const std::string& textN) {
     for (int32_t i = 0; i < text.length(); i++) {
         UChar32 c = text.char32At(i);
 
-        if (c != prevChar) {  
+        if (c != prevChar) {
             result.append(c);
             prevChar = c;
         }

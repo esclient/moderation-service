@@ -3,7 +3,7 @@
 namespace test_utils {
 
 ModerationRecord MakeRecord(int64_t object_id, const std::string& text, bool is_flagged,
-                        const std::string& reason, moderation::ObjectType type){
+                            const std::string& reason, moderation::ObjectType type) {
 
     ModerationRecord record;
     record.object_id = object_id;
@@ -17,7 +17,7 @@ ModerationRecord MakeRecord(int64_t object_id, const std::string& text, bool is_
 }
 
 moderation::ModerateObjectRequest MakeRequest(int64_t id, const std::string& text,
-                                            moderation::ObjectType type){
+                                              moderation::ObjectType type) {
     moderation::ModerateObjectRequest request;
     request.set_id(id);
     request.set_text(text);
@@ -29,8 +29,8 @@ moderation::ModerateObjectRequest MakeRequest(int64_t id, const std::string& tex
 moderation::ModerateObjectResponse MakeResponse(bool success) {
     moderation::ModerateObjectResponse response;
     response.set_success(success);
-    
+
     return response;
 }
 
-} //namespace test_utils
+} // namespace test_utils
