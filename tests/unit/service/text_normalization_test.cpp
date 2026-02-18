@@ -1,5 +1,6 @@
 #include "service/text_normalization.hpp"
 #include <gtest/gtest.h>
+#include <string>
 
 TEST(TextNormalization, EmptyString) {
     EXPECT_TRUE(TextNormalization::TextNormalization("").empty());
@@ -33,9 +34,13 @@ TEST(RepetitionNormalization, ReduceSpamPatterns) {
 
 TEST(InvisibleCharacterNormalization, StripZeroWidthSpace) {
     std::string with_zwsp = "a";
-    with_zwsp += static_cast<char>(0xE2);
-    with_zwsp += static_cast<char>(0x80);
-    with_zwsp += static_cast<char>(0x8B);
+    // UTF-8 encoding for Zero-Width Space (U+200B)
+    constexpr char ZWSP_BYTE_1 = static_cast<char>(0xE2);
+    constexpr char ZWSP_BYTE_2 = static_cast<char>(0x80);
+    constexpr char ZWSP_BYTE_3 = static_cast<char>(0x8B);
+    with_zwsp += ZWSP_BYTE_1;
+    with_zwsp += ZWSP_BYTE_2;
+    with_zwsp += ZWSP_BYTE_3;
     with_zwsp += "b";
     std::string out = TextNormalization::InvisibleCharacterNormalization(with_zwsp);
     EXPECT_EQ(out, "ab");

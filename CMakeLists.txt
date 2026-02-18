@@ -101,7 +101,8 @@ add_executable(
     src/moderationservice/service/word_checker.cpp
     src/moderationservice/service/text_processor.cpp
     src/moderationservice/model/constants.cpp
-    src/moderationservice/kafka/kafkaclient.cpp)
+    src/moderationservice/kafka/kafkaclient.cpp
+    src/moderationservice/model/model_utils.cpp)
 
 target_link_libraries(
     ${PROJECT_NAME}

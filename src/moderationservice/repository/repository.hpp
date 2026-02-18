@@ -14,7 +14,7 @@
 class ModerationRepository : public IModerationRepository {
   public:
     explicit ModerationRepository(const std::string& database_url);
-    ~ModerationRepository();
+    ~ModerationRepository() override;
     bool SaveModerationResult(const ModerationRecord& result) override;
 
   private:

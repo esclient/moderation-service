@@ -1,10 +1,10 @@
 #include "mocks/test_utils.hpp"
+#include <string>
 
 namespace test_utils {
 
 ModerationRecord MakeRecord(int64_t object_id, const std::string& text, bool is_flagged,
                             const std::string& reason, moderation::ObjectType type) {
-
     ModerationRecord record;
     record.object_id = object_id;
     record.object_type = type;
@@ -16,10 +16,10 @@ ModerationRecord MakeRecord(int64_t object_id, const std::string& text, bool is_
     return record;
 }
 
-moderation::ModerateObjectRequest MakeRequest(int64_t id, const std::string& text,
+moderation::ModerateObjectRequest MakeRequest(int64_t request_id, const std::string& text,
                                               moderation::ObjectType type) {
     moderation::ModerateObjectRequest request;
-    request.set_id(id);
+    request.set_id(request_id);
     request.set_text(text);
     request.set_type(type);
 

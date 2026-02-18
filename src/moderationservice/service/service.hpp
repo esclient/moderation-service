@@ -28,9 +28,9 @@ class ModerationService final : public std::enable_shared_from_this<ModerationSe
     explicit ModerationService(std::shared_ptr<IModerationRepository> repository,
                                std::shared_ptr<KafkaClient> kafkaClient);
     void InitializeKafkaCallback();
-    bool ProcessModerationRequest(int64_t requestId, const std::string& text);
+    bool ProcessModerationRequest(int64_t request_id, const std::string& text);
     void HandleModerationResult(const moderation::ModerateObjectResponse& response,
-                                int64_t requestId, const std::string& originalText,
+                                int64_t request_id, const std::string& originalText,
                                 moderation::ObjectType objectType);
 
   private:

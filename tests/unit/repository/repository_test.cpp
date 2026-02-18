@@ -1,3 +1,4 @@
+#include "config/test_constants.hpp"
 #include "mocks/fake_moderation_repository.hpp"
 #include "repository/repository.hpp"
 #include <chrono>
@@ -8,17 +9,17 @@ TEST(FakeModerationRepository, SaveStoresRecord) {
     FakeModerationRepository repo;
     ModerationRecord record{};
 
-    record.object_id = 42;
+    record.object_id = test_constants::TEST_ID_BASIC;
     record.object_type = moderation::OBJECT_TYPE_COMMENT_TEXT;
     record.text = "hello";
     record.is_flagged = true;
     record.reason = "bad";
     record.moderated_at = std::chrono::system_clock::now();
 
-    bool ok = repo.SaveModerationResult(record);
-    ASSERT_TRUE(ok);
+    bool save_result = repo.SaveModerationResult(record);
+    ASSERT_TRUE(save_result);
     ASSERT_EQ(1u, repo.GetStoredRecords().size());
-    EXPECT_EQ(42, repo.GetStoredRecords()[0].object_id);
+    EXPECT_EQ(moderation::config::TEST_ID_BASIC, repo.GetStoredRecords()[0].object_id);
     EXPECT_EQ(record.text, repo.GetStoredRecords()[0].text);
     EXPECT_TRUE(repo.GetStoredRecords()[0].is_flagged);
 }
@@ -65,7 +66,7 @@ TEST(FakeModerationRepository, SaveStoresReasonAndType) {
     FakeModerationRepository repo;
 
     ModerationRecord record;
-    record.object_id = 42;
+    record.object_id = test_constants::TEST_ID_BASIC;
     record.object_type = moderation::OBJECT_TYPE_COMMENT_TEXT;
     record.text = "bad content";
     record.is_flagged = true;
@@ -76,7 +77,7 @@ TEST(FakeModerationRepository, SaveStoresReasonAndType) {
     ASSERT_EQ(1u, repo.GetStoredRecords().size());
 
     const auto& stored = repo.GetStoredRecords()[0];
-    EXPECT_EQ(42, stored.object_id);
+    EXPECT_EQ(moderation::config::TEST_ID_BASIC, stored.object_id);
     EXPECT_EQ(moderation::OBJECT_TYPE_COMMENT_TEXT, stored.object_type);
     EXPECT_EQ("bad content", stored.text);
     EXPECT_TRUE(stored.is_flagged);
@@ -89,7 +90,7 @@ TEST(FakeModerationRepository, SaveWhenSetSaveResultFalse_DoesNotStore) {
     repo.SetSaveResult(false);
 
     ModerationRecord record;
-    record.object_id = 99;
+    record.object_id = test_constants::TEST_ID_SECONDARY;
     record.text = "test";
     record.is_flagged = true;
 

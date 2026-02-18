@@ -22,6 +22,7 @@ set(SERVICE_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/src/moderationservice/service/word_checker.cpp
     ${CMAKE_SOURCE_DIR}/src/moderationservice/service/text_processor.cpp
     ${CMAKE_SOURCE_DIR}/src/moderationservice/model/constants.cpp
+    ${CMAKE_SOURCE_DIR}/src/moderationservice/model/model_utils.cpp
 )
 
 function(add_service_test TEST_NAME)
@@ -86,7 +87,7 @@ add_service_test(handler_test
     ${CMAKE_CURRENT_SOURCE_DIR}/unit/handler/handler_test.cpp
     ${CMAKE_SOURCE_DIR}/src/moderationservice/handler/handler.cpp
     ${CMAKE_SOURCE_DIR}/src/moderationservice/service/service.cpp
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/kafka/kafkaclient.cpp 
+    ${CMAKE_SOURCE_DIR}/src/moderationservice/kafka/kafkaclient.cpp  
     ${CMAKE_CURRENT_SOURCE_DIR}/mocks/fake_moderation_repository.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mocks/mock_kafka_client.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mocks/test_utils.cpp

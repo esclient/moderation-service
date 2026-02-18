@@ -4,6 +4,8 @@
 #include "kafka/kafkaclient.hpp"
 #include "moderation.pb.h"
 #include <functional>
+#include <string>
+#include <utility>
 #include <vector>
 
 class MockKafkaClient : public KafkaClient {

@@ -8,6 +8,7 @@
 #include <grpcpp/grpcpp.h>
 #include <gtest/gtest.h>
 #include <memory>
+#include <string>
 
 TEST(ModerationHandlerTest, ModerateObject_EmptyText_InvalidArgument) {
     KafkaConfig config{};
