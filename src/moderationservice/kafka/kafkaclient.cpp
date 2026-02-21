@@ -9,8 +9,7 @@
 #include <utility>
 #include <vector>
 
-KafkaClient::KafkaClient(const KafkaConfig& config)
-    : config_(std::move(config)), initialized_(false) {}
+KafkaClient::KafkaClient(const KafkaConfig& config) : config_(config), initialized_(false) {}
 void KafkaClient::Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t,
                                                 const std::string&, moderation::ObjectType)>
                                  result_callback) {
@@ -20,7 +19,8 @@ void KafkaClient::Initialize(std::function<void(const moderation::ModerateObject
 
     try {
         producer_ = std::make_unique<KafkaProducer>(config_);
-        consumer_ = std::make_unique<KafkaConsumer>(config_, result_callback, producer_.get());
+        consumer_ =
+            std::make_unique<KafkaConsumer>(config_, std::move(result_callback), producer_.get());
         initialized_ = true;
         std::cout << "KafkaClient initialized successfully.\n";
     } catch (const std::exception& e) {

@@ -1,4 +1,5 @@
 #include "config/config.hpp"
+#include "config/test_constants.hpp"
 #include "handler/handler.hpp"
 #include "mocks/fake_moderation_repository.hpp"
 #include "mocks/mock_kafka_client.hpp"
@@ -17,7 +18,7 @@ TEST(ModerationHandlerTest, ModerateObject_EmptyText_InvalidArgument) {
     config.result_topic = "result";
     config.consumer_group_id = "cg";
     config.max_retries = 1;
-    config.retry_backoff_ms = 100;
+    config.retry_backoff_ms = test_constants::TEST_RETRY_BACKOFF_MS;
     config.enable_ssl = false;
 
     std::shared_ptr<IModerationRepository> repo = std::make_shared<FakeModerationRepository>();
@@ -38,11 +39,11 @@ TEST(ModerationHandlerTest, ModerateObject_EmptyText_InvalidArgument) {
 TEST(ModerationHandlerTest, ModerateObject_ZeroId_InvalidArgument) {
     KafkaConfig config{};
     config.brokers = "test";
-    config.request_topic = "r";
-    config.result_topic = "res";
+    config.request_topic = "request";
+    config.result_topic = "result";
     config.consumer_group_id = "cg";
     config.max_retries = 1;
-    config.retry_backoff_ms = 100;
+    config.retry_backoff_ms = test_constants::TEST_RETRY_BACKOFF_MS;
     config.enable_ssl = false;
 
     std::shared_ptr<IModerationRepository> repo = std::make_shared<FakeModerationRepository>();
@@ -66,7 +67,7 @@ TEST(ModerationHandlerTest, ModerateObject_ValidRequest_ReturnsOk) {
     config.result_topic = "result";
     config.consumer_group_id = "cg";
     config.max_retries = 1;
-    config.retry_backoff_ms = 100;
+    config.retry_backoff_ms = test_constants::TEST_RETRY_BACKOFF_MS;
     config.enable_ssl = false;
 
     auto repo = std::make_shared<FakeModerationRepository>();
@@ -76,7 +77,7 @@ TEST(ModerationHandlerTest, ModerateObject_ValidRequest_ReturnsOk) {
     auto service = std::make_shared<ModerationService>(repo, kafka);
     ModerationHandler handler(service);
 
-    auto request = test_utils::MakeRequest(123, "hello world");
+    auto request = test_utils::MakeRequest(test_constants::TEST_ID_HANDLER, "hello world");
     moderation::ModerateObjectResponse response;
     grpc::ServerContext context;
 
@@ -93,7 +94,7 @@ TEST(ModerationHandlerTest, ModerateObject_LongText_ReturnsOk) {
     config.result_topic = "result";
     config.consumer_group_id = "cg";
     config.max_retries = 1;
-    config.retry_backoff_ms = 100;
+    config.retry_backoff_ms = test_constants::TEST_RETRY_BACKOFF_MS;
     config.enable_ssl = false;
 
     auto repo = std::make_shared<FakeModerationRepository>();
@@ -103,8 +104,8 @@ TEST(ModerationHandlerTest, ModerateObject_LongText_ReturnsOk) {
     auto service = std::make_shared<ModerationService>(repo, kafka);
     ModerationHandler handler(service);
 
-    std::string long_text(1000, 'a');
-    auto request = test_utils::MakeRequest(456, long_text);
+    std::string long_text(test_constants::TEST_LONG_TEXT_LENGTH, 'a');
+    auto request = test_utils::MakeRequest(test_constants::TEST_ID_LONG_TEXT, long_text);
     moderation::ModerateObjectResponse response;
     grpc::ServerContext context;
 
@@ -121,7 +122,7 @@ TEST(ModerationHandlerTest, ModerateObject_KafkaFailure_ReturnsError) {
     config.result_topic = "result";
     config.consumer_group_id = "cg";
     config.max_retries = 1;
-    config.retry_backoff_ms = 100;
+    config.retry_backoff_ms = test_constants::TEST_RETRY_BACKOFF_MS;
     config.enable_ssl = false;
 
     auto repo = std::make_shared<FakeModerationRepository>();
@@ -131,7 +132,7 @@ TEST(ModerationHandlerTest, ModerateObject_KafkaFailure_ReturnsError) {
     auto service = std::make_shared<ModerationService>(repo, kafka);
     ModerationHandler handler(service);
 
-    auto request = test_utils::MakeRequest(789, "test text");
+    auto request = test_utils::MakeRequest(test_constants::TEST_ID_MAX, "test text");
     moderation::ModerateObjectResponse response;
     grpc::ServerContext context;
 
@@ -148,7 +149,7 @@ TEST(ModerationHandlerTest, ModerateObject_SpecialCharacters_ReturnsOk) {
     config.result_topic = "result";
     config.consumer_group_id = "cg";
     config.max_retries = 1;
-    config.retry_backoff_ms = 100;
+    config.retry_backoff_ms = test_constants::TEST_RETRY_BACKOFF_MS;
     config.enable_ssl = false;
 
     auto repo = std::make_shared<FakeModerationRepository>();
@@ -158,7 +159,7 @@ TEST(ModerationHandlerTest, ModerateObject_SpecialCharacters_ReturnsOk) {
     auto service = std::make_shared<ModerationService>(repo, kafka);
     ModerationHandler handler(service);
 
-    auto request = test_utils::MakeRequest(999, "Hello 👋 世界 @#$%");
+    auto request = test_utils::MakeRequest(test_constants::TEST_ID_SPECIAL, "Hello 👋 世界 @#$%");
     moderation::ModerateObjectResponse response;
     grpc::ServerContext context;
 

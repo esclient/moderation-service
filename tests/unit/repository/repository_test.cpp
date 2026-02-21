@@ -18,8 +18,8 @@ TEST(FakeModerationRepository, SaveStoresRecord) {
 
     bool save_result = repo.SaveModerationResult(record);
     ASSERT_TRUE(save_result);
-    ASSERT_EQ(1u, repo.GetStoredRecords().size());
-    EXPECT_EQ(moderation::config::TEST_ID_BASIC, repo.GetStoredRecords()[0].object_id);
+    ASSERT_EQ(1U, repo.GetStoredRecords().size());
+    EXPECT_EQ(test_constants::TEST_ID_BASIC, repo.GetStoredRecords()[0].object_id);
     EXPECT_EQ(record.text, repo.GetStoredRecords()[0].text);
     EXPECT_TRUE(repo.GetStoredRecords()[0].is_flagged);
 }
@@ -37,7 +37,7 @@ TEST(FakeModerationRepository, SaveMultipleRecords) {
 
     repo.SaveModerationResult(aRecord);
     repo.SaveModerationResult(bRecord);
-    ASSERT_EQ(2u, repo.GetStoredRecords().size());
+    ASSERT_EQ(2U, repo.GetStoredRecords().size());
     EXPECT_EQ(1, repo.GetStoredRecords()[0].object_id);
     EXPECT_EQ(2, repo.GetStoredRecords()[1].object_id);
 }
@@ -74,10 +74,10 @@ TEST(FakeModerationRepository, SaveStoresReasonAndType) {
     record.reason = "contains forbidden words";
 
     EXPECT_TRUE(repo.SaveModerationResult(record));
-    ASSERT_EQ(1u, repo.GetStoredRecords().size());
+    ASSERT_EQ(1U, repo.GetStoredRecords().size());
 
     const auto& stored = repo.GetStoredRecords()[0];
-    EXPECT_EQ(moderation::config::TEST_ID_BASIC, stored.object_id);
+    EXPECT_EQ(test_constants::TEST_ID_BASIC, stored.object_id);
     EXPECT_EQ(moderation::OBJECT_TYPE_COMMENT_TEXT, stored.object_type);
     EXPECT_EQ("bad content", stored.text);
     EXPECT_TRUE(stored.is_flagged);
@@ -114,15 +114,15 @@ TEST(FakeModerationRepository, MultipleSavesWithMixedResults) {
     record3.text = "third";
 
     EXPECT_TRUE(repo.SaveModerationResult(record1));
-    EXPECT_EQ(1u, repo.GetStoredRecords().size());
+    EXPECT_EQ(1U, repo.GetStoredRecords().size());
 
     repo.SetSaveResult(false);
     EXPECT_FALSE(repo.SaveModerationResult(record2));
-    EXPECT_EQ(1u, repo.GetStoredRecords().size());
+    EXPECT_EQ(1U, repo.GetStoredRecords().size());
 
     repo.SetSaveResult(true);
     EXPECT_TRUE(repo.SaveModerationResult(record3));
-    EXPECT_EQ(2u, repo.GetStoredRecords().size());
+    EXPECT_EQ(2U, repo.GetStoredRecords().size());
 
     EXPECT_EQ(1, repo.GetStoredRecords()[0].object_id);
     EXPECT_EQ(3, repo.GetStoredRecords()[1].object_id);

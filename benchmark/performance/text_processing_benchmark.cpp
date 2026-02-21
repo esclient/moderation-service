@@ -12,6 +12,7 @@ static void InitOnce() {
     }
 }
 
+// cppcheck-suppress constParameterCallback
 static void BM_TextProcessing_Short(benchmark::State& state) {
     InitOnce();
     std::string text(50, 'a');
@@ -21,6 +22,7 @@ static void BM_TextProcessing_Short(benchmark::State& state) {
     }
 }
 
+// cppcheck-suppress constParameterCallback
 static void BM_TextProcessing_Medium(benchmark::State& state) {
     InitOnce();
     std::string text(1024, 'a');
@@ -29,6 +31,7 @@ static void BM_TextProcessing_Medium(benchmark::State& state) {
     }
 }
 
+// cppcheck-suppress constParameterCallback
 static void BM_TextProcessing_Realistic(benchmark::State& state) {
     InitOnce();
     std::string text = "Hey everyone! Check out this awesome product at example.com 🔥🔥🔥";
@@ -37,6 +40,7 @@ static void BM_TextProcessing_Realistic(benchmark::State& state) {
     }
 }
 
+// cppcheck-suppress constParameterCallback
 static void BM_TextProcessing_WithProfanity(benchmark::State& state) {
     InitOnce();
     std::string text = "This is a test with some b@d w0rds and leetspeak";
@@ -45,6 +49,7 @@ static void BM_TextProcessing_WithProfanity(benchmark::State& state) {
     }
 }
 
+// cppcheck-suppress constParameterCallback
 static void BM_TextProcessing_Long(benchmark::State& state) {
     InitOnce();
     std::string text(5000, 'a'); // 5KB
@@ -53,6 +58,7 @@ static void BM_TextProcessing_Long(benchmark::State& state) {
     }
 }
 
+// cppcheck-suppress constParameterCallback
 static void BM_TextProcessing_Extreme_Long(benchmark::State& state) {
     InitOnce();
     std::string text(100000, 'A');
@@ -61,12 +67,14 @@ static void BM_TextProcessing_Extreme_Long(benchmark::State& state) {
     }
 }
 
+// cppcheck-suppress constParameterCallback
 static void BM_InitializeForbiddenWords(benchmark::State& state) {
     for (auto _ : state) {
         TextProcessingConstants::HashTrieMaps::InitializeForbiddenWords();
     }
 }
 
+// cppcheck-suppress constParameterCallback
 static void BM_TextProcessing_Complexity(benchmark::State& state) {
     InitOnce();
     const size_t size = state.range(0);

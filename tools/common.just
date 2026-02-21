@@ -91,7 +91,8 @@ test:
     ./build/tests/Release/word_checker_test.exe
 
 benchmark:
-    cmake -B build -DBUILD_BENCHMARKS=ON
+    just build-windows
+    cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_BENCHMARKS=ON
     cmake --build build --target text_processing_benchmark --config Release
     cmake --build build --target text_processing_benchmark --config Release && \
     (./build/benchmark/Release/text_processing_benchmark.exe || \
