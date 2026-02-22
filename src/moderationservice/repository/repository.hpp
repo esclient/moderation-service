@@ -2,6 +2,8 @@
 
 #include "config/config.hpp"
 #include "moderation.pb.h"
+#include "repository/imoderation_repository.hpp"
+#include "repository/moderation_record.hpp"
 #include <chrono>
 #include <memory>
 #include <optional>
@@ -9,20 +11,11 @@
 #include <string>
 #include <vector>
 
-struct ModerationRecord {
-    int64_t object_id;
-    moderation::ObjectType object_type;
-    std::string text;
-    bool is_flagged;
-    std::chrono::system_clock::time_point moderated_at;
-    std::string reason;
-};
-
-class ModerationRepository {
+class ModerationRepository : public IModerationRepository {
   public:
     explicit ModerationRepository(const std::string& database_url);
-    ~ModerationRepository();
-    bool SaveModerationResult(const ModerationRecord& result);
+    ~ModerationRepository() override;
+    bool SaveModerationResult(const ModerationRecord& result) override;
 
   private:
     std::string database_url_;

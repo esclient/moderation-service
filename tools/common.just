@@ -81,3 +81,19 @@ install-dev-tools:
 upgrade-python-tools:
     pipx upgrade cpplint
     pipx upgrade cmakelang
+
+test:
+    ./build/tests/Release/fake_repository_test.exe
+    ./build/tests/Release/handler_test.exe
+    ./build/tests/Release/moderation_service_test.exe
+    ./build/tests/Release/text_normalization_test.exe
+    ./build/tests/Release/text_processor_test.exe
+    ./build/tests/Release/word_checker_test.exe
+
+benchmark:
+    just build-windows
+    cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_BENCHMARKS=ON
+    cmake --build build --target text_processing_benchmark --config Release
+    cmake --build build --target text_processing_benchmark --config Release && \
+    (./build/benchmark/Release/text_processing_benchmark.exe || \
+     ./build/benchmark/text_processing_benchmark)

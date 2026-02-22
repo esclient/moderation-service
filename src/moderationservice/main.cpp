@@ -49,15 +49,15 @@ int main() {
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
-        std::cout << "Shutting down server..." << std::endl;
+        std::cout << "Shutting down server...\n";
 
         kafkaClient->StopConsumer();
         kafkaClient->Flush();
         kafkaClient->Shutdown();
 
-        std::cout << "Server shutdown complete." << std::endl;
+        std::cout << "Server shutdown complete.\n";
     } catch (const std::exception& e) {
-        std::cerr << "Main Fatal Error: " << e.what() << std::endl;
+        std::cerr << "Main Fatal Error: " << e.what() << "\n";
         return 1;
     }
 

@@ -1,4 +1,5 @@
 #include "service/text_normalization.hpp"
+#include "model/unicode_constants.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -11,19 +12,19 @@ std::string TextNormalization(const std::string& textN) {
     UErrorCode status = U_ZERO_ERROR;
     const icu::Normalizer2* normalizer = icu::Normalizer2::getNFCInstance(status);
 
-    if (U_FAILURE(status)) {
-        std::cerr << "Error getting normalizer" << std::endl;
+    if (U_FAILURE(status) != 0) {
+        std::cerr << "Error getting normalizer" << "\n";
         return "";
     }
 
     if (text.length() == 0) {
-        text = icu::UnicodeString(textN.c_str(), textN.length(), "UTF-8");
+        text = icu::UnicodeString(textN.c_str(), static_cast<int32_t>(textN.length()), "UTF-8");
     }
 
     icu::UnicodeString normalized = normalizer->normalize(text, status);
 
-    if (U_FAILURE(status)) {
-        std::cerr << "Error normalizing" << std::endl;
+    if (U_FAILURE(status) != 0) {
+        std::cerr << "Error normalizing" << "\n";
         return "";
     }
 
@@ -42,21 +43,21 @@ std::string WhitespaceNormalization(const std::string& textN) {
     icu::UnicodeString result;
 
     if (text.length() == 0) {
-        text = icu::UnicodeString(textN.c_str(), textN.length(), "UTF-8");
+        text = icu::UnicodeString(textN.c_str(), static_cast<int32_t>(textN.length()), "UTF-8");
     }
 
     bool prev_space = false;
 
     for (int32_t i = 0; i < text.length(); i++) {
-        UChar32 c = text.char32At(i);
+        UChar32 character = text.char32At(i);
 
-        if (u_isWhitespace(c)) {
+        if (u_isWhitespace(character)) {
             if (!prev_space && result.length() > 0) {
                 result.append((UChar32)' ');
                 prev_space = true;
             }
         } else {
-            result.append(c);
+            result.append(character);
             prev_space = false;
         }
         if (U16_IS_LEAD(text.charAt(i))) {
@@ -73,29 +74,22 @@ std::string RepetitionNormalization(const std::string& textN) {
     icu::UnicodeString result;
 
     UChar32 prevChar = 0;
-    int repeatCount = 0;
 
     if (text.length() == 0) {
-        text = icu::UnicodeString(textN.c_str(), textN.length(), "UTF-8");
+        text = icu::UnicodeString(textN.c_str(), static_cast<int32_t>(textN.length()), "UTF-8");
     }
 
     for (int32_t i = 0; i < text.length(); i++) {
-        UChar32 c = text.char32At(i);
+        UChar32 character = text.char32At(i);
 
-        if (c == prevChar) {
-            repeatCount++;
-
-            if (repeatCount < 2) {
-                result.append(c);
-            }
-        } else {
-            result.append(c);
-            prevChar = c;
-            repeatCount = 0;
+        if (character != prevChar) {
+            result.append(character);
+            prevChar = character;
         }
 
-        if (U16_IS_LEAD(text.charAt(i)))
+        if (U16_IS_LEAD(text.charAt(i))) {
             i++;
+        }
     }
 
     std::string output;
@@ -106,39 +100,41 @@ std::string RepetitionNormalization(const std::string& textN) {
 std::string InvisibleCharacterNormalization(const std::string& textN) {
     icu::UnicodeString text = icu::UnicodeString::fromUTF8(textN);
     if (text.length() == 0) {
-        text = icu::UnicodeString(textN.c_str(), textN.length(), "UTF-8");
+        text = icu::UnicodeString(textN.c_str(), static_cast<int32_t>(textN.length()), "UTF-8");
     }
     icu::UnicodeString result;
 
     for (int32_t i = 0; i < text.length(); i++) {
-        UChar32 c = text.char32At(i);
+        UChar32 character = text.char32At(i);
 
         // Skip zero-width and format characters
-        if (c == 0x200B ||                  // Zero Width Space
-            c == 0x200C ||                  // Zero Width Non-Joiner
-            c == 0x200D ||                  // Zero Width Joiner
-            c == 0x200E ||                  // Left-to-Right Mark
-            c == 0x200F ||                  // Right-to-Left Mark
-            c == 0xFEFF ||                  // Zero Width No-Break Space (BOM)
-            c == 0x2060 ||                  // Word Joiner
-            c == 0x2061 ||                  // Function Application
-            c == 0x2062 ||                  // Invisible Times
-            c == 0x2063 ||                  // Invisible Separator
-            c == 0x2064 ||                  // Invisible Plus
-            c == 0x00AD ||                  // Soft Hyphen
-            c == 0x034F ||                  // Combining Grapheme Joiner
-            c == 0x061C ||                  // Arabic Letter Mark
-            c == 0x180E ||                  // Mongolian Vowel Separator
-            c == 0x2028 ||                  // Line Separator
-            c == 0x2029 ||                  // Paragraph Separator
-            (c >= 0x202A && c <= 0x202E)) { // Bidirectional markers
+        if (character == unicode_constants::ZERO_WIDTH_SPACE ||
+            character == unicode_constants::ZERO_WIDTH_NON_JOINER ||
+            character == unicode_constants::ZERO_WIDTH_JOINER ||
+            character == unicode_constants::LEFT_TO_RIGHT_MARK ||
+            character == unicode_constants::RIGHT_TO_LEFT_MARK ||
+            character == unicode_constants::ZERO_WIDTH_NO_BREAK_SPACE ||
+            character == unicode_constants::WORD_JOINER ||
+            character == unicode_constants::FUNCTION_APPLICATION ||
+            character == unicode_constants::INVISIBLE_TIMES ||
+            character == unicode_constants::INVISIBLE_SEPARATOR ||
+            character == unicode_constants::INVISIBLE_PLUS ||
+            character == unicode_constants::SOFT_HYPHEN ||
+            character == unicode_constants::COMBINING_GRAPHEME_JOINER ||
+            character == unicode_constants::ARABIC_LETTER_MARK ||
+            character == unicode_constants::MONGOLIAN_VOWEL_SEPARATOR ||
+            character == unicode_constants::LINE_SEPARATOR ||
+            character == unicode_constants::PARAGRAPH_SEPARATOR ||
+            (character >= unicode_constants::BIDI_MARKERS_START &&
+             character <= unicode_constants::BIDI_MARKERS_END)) {
             continue;
         }
 
-        result.append(c);
+        result.append(character);
 
-        if (U16_IS_LEAD(text.charAt(i)))
+        if (U16_IS_LEAD(text.charAt(i))) {
             i++;
+        }
     }
 
     std::string output;

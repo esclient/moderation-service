@@ -24,12 +24,12 @@ void Server::Start() {
     builder.experimental().SetInterceptorCreators(std::move(this->interceptor_creators_));
 
     this->server_ = builder.BuildAndStart();
-    std::cout << this->server_name_ << " listening on " << this->server_address_ << std::endl;
+    std::cout << this->server_name_ << " listening on " << this->server_address_ << "\n";
     this->server_->Wait();
 }
 
 void Server::Stop() {
-    std::cout << "Shutting down " << this->server_name_ << "..." << std::endl;
+    std::cout << "Shutting down " << this->server_name_ << "..." << "\n";
     this->server_->Shutdown();
-    std::cout << this->server_name_ << " shut down." << std::endl;
+    std::cout << this->server_name_ << " shut down." << "\n";
 }

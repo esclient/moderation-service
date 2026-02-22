@@ -13,9 +13,9 @@ class LoggerInterceptor final : public grpc::experimental::Interceptor {
     explicit LoggerInterceptor(grpc::experimental::ServerRpcInfo* info) {
         std::string method = info->method();
         if (method == "unknown") {
-            std::cout << "[LoggerInterceptor] Unknown method called." << std::endl;
+            std::cout << "[LoggerInterceptor] Unknown method called.\n";
         } else {
-            std::cout << "[LoggerInterceptor] Method called: " << method << std::endl;
+            std::cout << "[LoggerInterceptor] Method called: " << method << "\n";
         }
     }
     void Intercept(grpc::experimental::InterceptorBatchMethods* methods) { methods->Proceed(); }

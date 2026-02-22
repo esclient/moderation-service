@@ -1,26 +1,27 @@
 #include "service/service.hpp"
+#include "model/model_utils.hpp"
 #include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
 
-ModerationService::ModerationService(std::shared_ptr<ModerationRepository> repository,
+ModerationService::ModerationService(std::shared_ptr<IModerationRepository> repository,
                                      std::shared_ptr<KafkaClient> kafkaClient)
     : repository_(std::move(repository)), kafkaClient_(std::move(kafkaClient)) {
     TextProcessingConstants::HashTrieMaps::InitializeForbiddenWords();
 }
 void ModerationService::InitializeKafkaCallback() {
     auto callback = [weakThis = std::weak_ptr<ModerationService>(shared_from_this())](
-                        const moderation::ModerateObjectResponse& response, int64_t requestId,
+                        const moderation::ModerateObjectResponse& response, int64_t request_id,
                         const std::string& originalText, moderation::ObjectType object_type) {
         try {
             if (auto self = weakThis.lock()) {
-                self->HandleModerationResult(response, requestId, originalText, object_type);
+                self->HandleModerationResult(response, request_id, originalText, object_type);
             } else {
-                std::cerr << "ModerationService expired, cannot handle result" << std::endl;
+                std::cerr << "ModerationService expired, cannot handle result" << "\n";
             }
         } catch (const std::exception& e) {
-            std::cerr << "Error in Kafka callback: " << e.what() << std::endl;
+            std::cerr << "Error in Kafka callback: " << e.what() << "\n";
         }
     };
     kafkaClient_->Initialize(callback);
@@ -30,7 +31,7 @@ bool ModerationService::ProcessModerationRequest(int64_t request_id, const std::
         if (text.empty() || request_id == 0) {
             std::cerr << "[Service] ERROR: Invalid moderation request. Text is empty or request ID "
                          "is zero."
-                      << std::endl;
+                      << "\n";
             return false;
         }
 
@@ -40,18 +41,18 @@ bool ModerationService::ProcessModerationRequest(int64_t request_id, const std::
 
         if (!kafkaClient_->SendRequestAsync(kafka_request)) {
             std::cerr << "[Service] ERROR: Failed to send moderation request to Kafka."
-                      << request_id << std::endl;
+                      << request_id << "\n";
             return false;
         }
 
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "[Service] ERROR: " << e.what() << std::endl;
+        std::cerr << "[Service] ERROR: " << e.what() << "\n";
         return false;
     }
 }
 void ModerationService::HandleModerationResult(const moderation::ModerateObjectResponse& response,
-                                               int64_t requestId, const std::string& originalText,
+                                               int64_t request_id, const std::string& originalText,
                                                moderation::ObjectType objectType) {
     try {
         bool isFlagged = response.success();
@@ -60,14 +61,14 @@ void ModerationService::HandleModerationResult(const moderation::ModerateObjectR
             std::string reason =
                 "Violates content policy"; // This can be enhanced to provide specific
                                            // reasons based on the response
-            std::cout << "Text flagged for moderation, request id: " << requestId << std::endl;
-            SaveResultToDatabase(requestId, originalText, isFlagged, reason, objectType);
+            std::cout << "Text flagged for moderation, request id: " << request_id << "\n";
+            SaveResultToDatabase(request_id, originalText, isFlagged, reason, objectType);
 
         } else {
-            std::cout << "Text passed moderation: " << requestId << std::endl;
+            std::cout << "Text passed moderation: " << request_id << "\n";
         }
     } catch (const std::exception& e) {
-        std::cerr << "Error handling moderation result: " << e.what() << std::endl;
+        std::cerr << "Error handling moderation result: " << e.what() << "\n";
     }
 }
 
@@ -84,15 +85,11 @@ void ModerationService::SaveResultToDatabase(int64_t object_id, const std::strin
 
     if (!repository_->SaveModerationResult(record)) {
         std::cerr << "Failed to save moderation result to database for object ID: " << object_id
-                  << std::endl;
+                  << "\n";
     } else {
-        std::string type_name =
-            (object_type == moderation::OBJECT_TYPE_COMMENT_TEXT      ? "COMMENT_TEXT"
-             : object_type == moderation::OBJECT_TYPE_MOD_DESCRIPTION ? "MOD_DESCRIPTION"
-             : object_type == moderation::OBJECT_TYPE_USER_NAME       ? "USER_NAME"
-                                                                      : "UNSPECIFIED");
+        std::string type_name = moderation::utils::ObjectTypeToString(object_type);
 
         std::cout << "Moderation result saved to database for object ID: " << object_id
-                  << ", Type: " << type_name << std::endl;
+                  << ", Type: " << type_name << "\n";
     }
 }
