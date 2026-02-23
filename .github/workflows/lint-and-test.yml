@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   lint-and-test:
-    uses: esclient/tools/.github/workflows/lint-and-test-cpp.yml@v1.0.0
+    uses: esclient/tools/.github/workflows/lint-and-test-cpp.yml@cpp-workflow
     with:
       source: "moderationservice"
       sonar-inclusions: "src/**,tests/**"
