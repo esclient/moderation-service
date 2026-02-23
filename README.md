@@ -17,3 +17,4 @@ To build and run you need the following installed:
 -sh/bash (Windows only)
 -Internet connection (Optional)
 -Electricity (Recommended)
+-Antidepressants(Recommended)
