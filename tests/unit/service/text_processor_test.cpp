@@ -14,7 +14,8 @@ TEST_F(TextProcessorTest, CleanTextReturnsFalse) {
 
 TEST_F(TextProcessorTest, ManyForbiddenWordsReturnsTrue) {
     std::string bad;
-    for (int i = 0; i < 5; ++i) {
+    constexpr int testForbiddenWordRepetitions = 5;
+    for (int i = 0; i < testForbiddenWordRepetitions; ++i) {
         bad += "gay ";
     }
 

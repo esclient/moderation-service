@@ -1,12 +1,4 @@
-Checks: >
-    clang-analyzer-*,
-    bugprone-*,
-    performance-*,
-    modernize-*,
-    readability-*,
-    -modernize-use-trailing-return-type
-
+Checks: 'clang-analyzer-*,bugprone-*,performance-*,modernize-*,readability-*,-modernize-use-trailing-return-type,-bugprone-suspicious-include'
 WarningsAsErrors: ''
-
-HeaderFilterRegex: '^(src|include|tests|benchmark)/'
+HeaderFilterRegex: '.*/moderation-service/(src|tests|benchmark|include)/.*'
 FormatStyle: file

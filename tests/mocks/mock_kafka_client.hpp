@@ -18,7 +18,7 @@ class MockKafkaClient : public KafkaClient {
     bool SendRequestAsync(const moderation::ModerateObjectRequest& request) override;
 
     void SetSendResult(bool value) { send_result_ = value; }
-    const std::vector<moderation::ModerateObjectRequest>& GetSentRequests() const {
+    [[nodiscard]] const std::vector<moderation::ModerateObjectRequest>& GetSentRequests() const {
         return sent_requests_;
     }
     void ClearSentRequests() { sent_requests_.clear(); }

@@ -11,15 +11,16 @@ std::vector<std::string> Tokenize(const std::string& textN) {
     std::vector<std::string> tokens;
     icu::UnicodeString text = icu::UnicodeString::fromUTF8(textN);
     if (text.length() == 0) {
-        text = icu::UnicodeString(textN.c_str(), textN.length(), "UTF-8");
+        const auto length = static_cast<int32_t>(textN.length());
+        text = icu::UnicodeString(textN.c_str(), length, "UTF-8");
     }
     std::string currentWord;
 
     for (int32_t i = 0; i < text.length(); i++) {
-        UChar32 c = text.char32At(i);
+        UChar32 character = text.char32At(i);
 
-        if (u_isalnum(c)) {
-            icu::UnicodeString charStr(c);
+        if (u_isalnum(character)) {
+            icu::UnicodeString charStr(character);
             std::string utf8char;
             charStr.toUTF8String(utf8char);
             currentWord += utf8char;
@@ -44,13 +45,13 @@ std::vector<std::string> Tokenize(const std::string& textN) {
 bool WordChecking(const std::vector<std::string>& textN) {
     unsigned int forbiddenWordCount = 0;
 
-    for (int i = 0; i < textN.size(); i++) {
-        if (forbiddenWords.find(textN[i]) != forbiddenWords.end()) {
+    for (const auto& token : textN) {
+        if (forbiddenWords.find(token) != forbiddenWords.end()) {
             forbiddenWordCount++;
         }
     }
 
-    return (forbiddenWordCount > 3);
+    return (forbiddenWordCount > TextProcessingConstants::Thresholds::FORBIDDEN_WORD_THRESHOLD);
 }
 
 } // namespace WordChecker

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config/config.hpp"
+#include "config/timeouts.hpp"
 #include "moderation.pb.h"
 #include <atomic>
 #include <functional>
@@ -10,6 +11,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 class KafkaProducer;
@@ -27,7 +29,7 @@ class ConsumerEventCb : public RdKafka::EventCb {
 
 class KafkaClient {
   public:
-    explicit KafkaClient(const KafkaConfig& config);
+    explicit KafkaClient(KafkaConfig config);
     ~KafkaClient();
 
     virtual void Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t,
@@ -44,7 +46,7 @@ class KafkaClient {
     KafkaConfig config_;
     std::unique_ptr<KafkaProducer> producer_;
     std::unique_ptr<KafkaConsumer> consumer_;
-    bool initialized_;
+    bool initialized_{false};
     std::mutex mutex_;
 };
 
@@ -57,8 +59,8 @@ class KafkaProducer {
                           const std::string& topic);
     bool SendResponseAsync(const moderation::ModerateObjectResponse& response,
                            const std::string& topic, const std::string& key);
-    bool Flush(int timeoutMs = 10000);
-    bool isHealthy() const { return producer_ != nullptr; }
+    bool Flush(int timeoutMs = moderation::config::KAFKA_FLUSH_TIMEOUT_MS);
+    [[nodiscard]] bool isHealthy() const { return producer_ != nullptr; }
 
   private:
     KafkaConfig config_;
@@ -79,7 +81,7 @@ class KafkaConsumer {
 
     void Start();
     void Stop();
-    bool isRunning() const { return running_.load(); }
+    [[nodiscard]] bool isRunning() const { return running_.load(); }
 
   private:
     void ConsumeLoop();

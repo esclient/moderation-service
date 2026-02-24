@@ -26,6 +26,7 @@ find_package(ICU REQUIRED COMPONENTS uc i18n data)
 find_package(RdKafka REQUIRED)
 find_package(Threads REQUIRED)
 find_package(libpqxx REQUIRED)
+find_package(absl CONFIG REQUIRED)
 
 set(CPM_DOWNLOAD_VERSION 0.40.2)
 if(CPM_SOURCE_CACHE)
@@ -82,11 +83,12 @@ add_custom_command(
 # Create library from generated sources
 add_library(${GENPROTO_LIB} ${PROTO_SRCS} ${PROTO_HDRS} ${GRPC_SRCS} ${GRPC_HDRS})
 
-target_include_directories(
-    ${GENPROTO_LIB} PUBLIC ${GENPROTO_DIR} ${protobuf_INCLUDE_DIRS_RELEASE}
-                           ${grpc_INCLUDE_DIRS_RELEASE} ${icu_INCLUDE_DIRS_RELEASE})
+target_include_directories(${GENPROTO_LIB}
+    PUBLIC
+        ${GENPROTO_DIR}
+)
 
-target_link_libraries(${GENPROTO_LIB} PUBLIC protobuf::libprotobuf gRPC::grpc++)
+target_link_libraries(${GENPROTO_LIB} PUBLIC protobuf::libprotobuf gRPC::grpc++ absl::strings)
 
 # link source files
 add_executable(
@@ -117,7 +119,8 @@ target_link_libraries(
             Threads::Threads
             RdKafka::rdkafka
             RdKafka::rdkafka++
-            libpqxx::pqxx)
+            libpqxx::pqxx
+            absl::strings)
 
 if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE U_STATIC_IMPLEMENTATION)
@@ -256,9 +259,9 @@ if(CPPCHECK_EXE
         COMMAND ${CMAKE_COMMAND} -E echo "=== Running cppcheck ==="
         COMMAND
             ${CPPCHECK_EXE} --enable=warning,style,performance,portability --inline-suppr
-            --suppress=*:${CMAKE_BINARY_DIR}/generated/* -I${PROJECT_SOURCE_DIR}/include
-            -I${PROJECT_SOURCE_DIR}/src/moderationservice --library=gnu
-            ${PROJECT_SOURCE_DIR}/src/moderationservice ${PROJECT_SOURCE_DIR}/include
+            --suppress=*:${CMAKE_BINARY_DIR}/generated/* --suppress=*:${CMAKE_BINARY_DIR}/_deps/*
+            -I${PROJECT_SOURCE_DIR}/include -I${PROJECT_SOURCE_DIR}/src/moderationservice
+            --library=gnu ${PROJECT_SOURCE_DIR}/src/moderationservice ${PROJECT_SOURCE_DIR}/include
             ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/benchmark
         COMMAND ${CMAKE_COMMAND} -E echo ""
         COMMAND ${CMAKE_COMMAND} -E echo "=== Running cpplint ==="

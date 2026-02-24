@@ -11,7 +11,7 @@ class WordCheckerTest : public ::testing::Test {
 
 TEST_F(WordCheckerTest, TokenizeSimple) {
     auto tokens = WordChecker::Tokenize("hello world");
-    ASSERT_EQ(2u, tokens.size());
+    ASSERT_EQ(2U, tokens.size());
     EXPECT_EQ(tokens[0], "hello");
     EXPECT_EQ(tokens[1], "world");
 }

@@ -6,8 +6,8 @@
 
 class FakeModerationRepository : public IModerationRepository {
   public:
-    bool SaveModerationResult(const ModerationRecord& result);
-    const std::vector<ModerationRecord>& GetStoredRecords() const { return stored_; }
+    bool SaveModerationResult(const ModerationRecord& result) override;
+    [[nodiscard]] const std::vector<ModerationRecord>& GetStoredRecords() const { return stored_; }
     void Clear() { stored_.clear(); }
     void SetSaveResult(bool value) { save_result_ = value; }
 
