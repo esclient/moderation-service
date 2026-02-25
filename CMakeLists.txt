@@ -88,7 +88,7 @@ target_include_directories(${GENPROTO_LIB}
         ${GENPROTO_DIR}
 )
 
-target_link_libraries(${GENPROTO_LIB} PUBLIC protobuf::libprotobuf gRPC::grpc++ absl::strings)
+target_link_libraries(${GENPROTO_LIB} PUBLIC protobuf::libprotobuf gRPC::grpc++ abseil::abseil)
 
 # link source files
 add_executable(
@@ -120,7 +120,7 @@ target_link_libraries(
             RdKafka::rdkafka
             RdKafka::rdkafka++
             libpqxx::pqxx
-            absl::strings)
+            abseil::abseil)
 
 if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE U_STATIC_IMPLEMENTATION)
