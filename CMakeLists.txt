@@ -20,7 +20,7 @@ endif()
 
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
 
-find_package(Protobuf REQUIRED CONFIG)
+find_package(protobuf REQUIRED CONFIG)
 find_package(gRPC REQUIRED CONFIG)
 find_package(ICU REQUIRED COMPONENTS uc i18n data)
 find_package(RdKafka REQUIRED)
@@ -86,9 +86,12 @@ add_library(${GENPROTO_LIB} ${PROTO_SRCS} ${PROTO_HDRS} ${GRPC_SRCS} ${GRPC_HDRS
 target_include_directories(${GENPROTO_LIB}
     PUBLIC
         ${GENPROTO_DIR}
+        ${protobuf_INCLUDE_DIRS}  
+        ${grpc_INCLUDE_DIRS}       
+        ${ICU_INCLUDE_DIRS}
 )
 
-target_link_libraries(${GENPROTO_LIB} PUBLIC protobuf::libprotobuf gRPC::grpc++ abseil::abseil)
+target_link_libraries(${GENPROTO_LIB} PUBLIC protobuf::protobuf gRPC::grpc++ abseil::abseil)
 
 # link source files
 add_executable(
@@ -111,7 +114,7 @@ target_link_libraries(
     PRIVATE ${GENPROTO_LIB}
             gRPC::grpc++
             gRPC::grpc++_reflection
-            protobuf::libprotobuf
+            protobuf::protobuf
             ICU::uc
             ICU::i18n
             ICU::data
