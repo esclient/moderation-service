@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(moderation-service)
+enable_testing()
 set(CMAKE_CXX_STANDARD 17)
 
 if(MSVC)
@@ -16,6 +17,12 @@ if(WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
     add_compile_definitions(U_STATIC_IMPLEMENTATION)
+endif()
+
+option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
+if(ENABLE_COVERAGE)
+    add_compile_options(--coverage -fprofile-arcs -ftest-coverage)
+    add_link_options(--coverage)
 endif()
 
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
@@ -86,12 +93,9 @@ add_library(${GENPROTO_LIB} ${PROTO_SRCS} ${PROTO_HDRS} ${GRPC_SRCS} ${GRPC_HDRS
 target_include_directories(${GENPROTO_LIB}
     PUBLIC
         ${GENPROTO_DIR}
-        ${protobuf_INCLUDE_DIRS}  
-        ${grpc_INCLUDE_DIRS}       
-        ${ICU_INCLUDE_DIRS}
 )
 
-target_link_libraries(${GENPROTO_LIB} PUBLIC protobuf::protobuf gRPC::grpc++ abseil::abseil)
+target_link_libraries(${GENPROTO_LIB} PUBLIC protobuf::libprotobuf gRPC::grpc++ abseil::abseil)
 
 # link source files
 add_executable(
@@ -114,7 +118,7 @@ target_link_libraries(
     PRIVATE ${GENPROTO_LIB}
             gRPC::grpc++
             gRPC::grpc++_reflection
-            protobuf::protobuf
+            protobuf::libprotobuf
             ICU::uc
             ICU::i18n
             ICU::data
