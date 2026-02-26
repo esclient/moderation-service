@@ -2,6 +2,8 @@ MKDIR := 'mkdir -p'
 RM := 'rm -rf ' + TMP_DIR
 DOWN := 'curl -fsSL'
 DOWN_OUT := '-o'
+EXE := if os() == "windows" { ".exe" } else { "" }
+TEST_DIR := if os() == "windows" { "./build/tests/Release" } else { "./build/tests" }
 
 fetch-proto:
     {{MKDIR}} "{{TMP_DIR}}"
@@ -83,12 +85,12 @@ upgrade-python-tools:
     pipx upgrade cmakelang
 
 test:
-    ./build/tests/Release/fake_repository_test.exe
-    ./build/tests/Release/handler_test.exe
-    ./build/tests/Release/moderation_service_test.exe
-    ./build/tests/Release/text_normalization_test.exe
-    ./build/tests/Release/text_processor_test.exe
-    ./build/tests/Release/word_checker_test.exe
+    {{TEST_DIR}}/fake_repository_test{{EXE}}
+    {{TEST_DIR}}/handler_test{{EXE}}
+    {{TEST_DIR}}/moderation_service_test{{EXE}}
+    {{TEST_DIR}}/text_normalization_test{{EXE}}
+    {{TEST_DIR}}/text_processor_test{{EXE}}
+    {{TEST_DIR}}/word_checker_test{{EXE}}
 
 benchmark:
     just build-windows
