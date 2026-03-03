@@ -1,8 +1,8 @@
 #include "service/word_checker.hpp"
 #include "model/constants.hpp"
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 namespace WordChecker {
 
@@ -39,9 +39,10 @@ std::vector<std::string> Tokenize(const std::string& textN) {
     return tokens;
 }
 bool WordChecking(const std::vector<std::string>& textN) {
-    unsigned int forbiddenWordCount = std::count_if(textN.begin(), textN.end(), [](const std::string& word) {
-        return forbiddenWords.find(word) != forbiddenWords.end();
-    });
+    unsigned int forbiddenWordCount =
+        std::count_if(textN.begin(), textN.end(), [](const std::string& word) {
+            return forbiddenWords.find(word) != forbiddenWords.end();
+        });
 
     return (forbiddenWordCount > TextProcessingConstants::Thresholds::FORBIDDEN_WORD_THRESHOLD);
 }
