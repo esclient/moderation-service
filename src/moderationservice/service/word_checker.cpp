@@ -14,7 +14,6 @@ std::vector<std::string> Tokenize(const std::string& textN) {
     std::string currentWord;
 
     for (int32_t i = 0; i < text.length(); i++) {
-
         if (UChar32 character = text.char32At(i); u_isalnum(character)) {
             icu::UnicodeString charStr(character);
             std::string utf8char;
@@ -39,13 +38,9 @@ std::vector<std::string> Tokenize(const std::string& textN) {
     return tokens;
 }
 bool WordChecking(const std::vector<std::string>& textN) {
-    unsigned int forbiddenWordCount = 0;
-
-    for (const auto& token : textN) {
-        if (forbiddenWords.find(token) != forbiddenWords.end()) {
-            forbiddenWordCount++;
-        }
-    }
+    unsigned int forbiddenWordCount = std::count_if(textN.begin(), textN.end(), [](const std::string& word) {
+        return forbiddenWords.find(word) != forbiddenWords.end();
+    });
 
     return (forbiddenWordCount > TextProcessingConstants::Thresholds::FORBIDDEN_WORD_THRESHOLD);
 }
