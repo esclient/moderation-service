@@ -2,6 +2,7 @@
 #include "model/constants.hpp"
 #include <string>
 #include <vector>
+#include <algorithm>
 
 namespace WordChecker {
 
