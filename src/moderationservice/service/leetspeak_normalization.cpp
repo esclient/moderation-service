@@ -62,9 +62,9 @@ bool IsPrimarilyCyrillic(const std::string& textN) {
     int latinCount = 0;
 
     for (int32_t i = 0; i < text.length(); i++) {
-        UChar32 character = text.char32At(i);
 
-        if (character >= unicode_constants::CYRILLIC_BLOCK_START &&
+        if (UChar32 character = text.char32At(i); 
+            character >= unicode_constants::CYRILLIC_BLOCK_START &&
             character <= unicode_constants::CYRILLIC_BLOCK_END) {
             cyrillicCount++;
         } else if ((character >= unicode_constants::LATIN_UPPERCASE_START &&

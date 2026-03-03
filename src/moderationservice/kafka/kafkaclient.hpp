@@ -30,7 +30,7 @@ class ConsumerEventCb : public RdKafka::EventCb {
 class KafkaClient {
   public:
     explicit KafkaClient(KafkaConfig config);
-    ~KafkaClient();
+    virtual ~KafkaClient();
 
     virtual void Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t,
                                                const std::string&, moderation::ObjectType)>

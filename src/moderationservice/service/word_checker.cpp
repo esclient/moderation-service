@@ -17,9 +17,8 @@ std::vector<std::string> Tokenize(const std::string& textN) {
     std::string currentWord;
 
     for (int32_t i = 0; i < text.length(); i++) {
-        UChar32 character = text.char32At(i);
 
-        if (u_isalnum(character)) {
+        if (UChar32 character = text.char32At(i); u_isalnum(character)) {
             icu::UnicodeString charStr(character);
             std::string utf8char;
             charStr.toUTF8String(utf8char);

@@ -7,10 +7,6 @@
 <img width="5573" height="6341" alt="Unbenannt-2025-10-16-0020(1)" src="https://github.com/user-attachments/assets/d9891188-500e-43e7-a8a3-6d11cbbd1d0e" />
 
 
-
-test
-test
-
 To build and run you need the following installed: 
 
 -Chocolatey (Windows)
@@ -21,5 +17,3 @@ To build and run you need the following installed:
 -Internet connection (Optional)
 -Electricity (Recommended)
 -Antidepressants(Recommended)
-
-test
