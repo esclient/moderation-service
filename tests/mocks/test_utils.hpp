@@ -12,7 +12,7 @@ ModerationRecord MakeRecord(int64_t object_id, const std::string& text, bool is_
                             moderation::ObjectType type = moderation::OBJECT_TYPE_UNSPECIFIED);
 
 moderation::ModerateObjectRequest
-MakeRequest(int64_t id, const std::string& text,
+MakeRequest(int64_t request_id, const std::string& text,
             moderation::ObjectType type = moderation::OBJECT_TYPE_UNSPECIFIED);
 
 moderation::ModerateObjectResponse MakeResponse(bool success);

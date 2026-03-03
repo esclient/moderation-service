@@ -29,4 +29,16 @@ constexpr UChar32 PARAGRAPH_SEPARATOR = 0x2029;
 constexpr UChar32 BIDI_MARKERS_START = 0x202A;
 constexpr UChar32 BIDI_MARKERS_END = 0x202E;
 
+// Cyrillic block
+constexpr UChar32 CYRILLIC_BLOCK_START = 0x0400;
+constexpr UChar32 CYRILLIC_BLOCK_END = 0x04FF;
+
+// Latin uppercase A–Z
+constexpr UChar32 LATIN_UPPERCASE_START = 0x0041;
+constexpr UChar32 LATIN_UPPERCASE_END = 0x005A;
+
+// Latin lowercase a–z
+constexpr UChar32 LATIN_LOWERCASE_START = 0x0061;
+constexpr UChar32 LATIN_LOWERCASE_END = 0x007A;
+
 } // namespace unicode_constants

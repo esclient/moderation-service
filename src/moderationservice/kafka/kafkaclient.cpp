@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-KafkaClient::KafkaClient(const KafkaConfig& config) : config_(config), initialized_(false) {}
+KafkaClient::KafkaClient(KafkaConfig config) : config_(std::move(config)) {}
 void KafkaClient::Initialize(std::function<void(const moderation::ModerateObjectResponse&, int64_t,
                                                 const std::string&, moderation::ObjectType)>
                                  result_callback) {

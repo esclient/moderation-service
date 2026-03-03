@@ -21,4 +21,7 @@ extern tsl::htrie_set<char> forbiddenWords;
 void InitializeForbiddenWords();
 
 } // namespace HashTrieMaps
+namespace Thresholds {
+inline constexpr unsigned int FORBIDDEN_WORD_THRESHOLD = 3;
+} // namespace Thresholds
 } // namespace TextProcessingConstants

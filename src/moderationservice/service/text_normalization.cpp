@@ -17,10 +17,6 @@ std::string TextNormalization(const std::string& textN) {
         return "";
     }
 
-    if (text.length() == 0) {
-        text = icu::UnicodeString(textN.c_str(), static_cast<int32_t>(textN.length()), "UTF-8");
-    }
-
     icu::UnicodeString normalized = normalizer->normalize(text, status);
 
     if (U_FAILURE(status) != 0) {
@@ -41,10 +37,6 @@ std::string TextNormalization(const std::string& textN) {
 std::string WhitespaceNormalization(const std::string& textN) {
     icu::UnicodeString text = icu::UnicodeString::fromUTF8(textN);
     icu::UnicodeString result;
-
-    if (text.length() == 0) {
-        text = icu::UnicodeString(textN.c_str(), static_cast<int32_t>(textN.length()), "UTF-8");
-    }
 
     bool prev_space = false;
 
@@ -75,10 +67,6 @@ std::string RepetitionNormalization(const std::string& textN) {
 
     UChar32 prevChar = 0;
 
-    if (text.length() == 0) {
-        text = icu::UnicodeString(textN.c_str(), static_cast<int32_t>(textN.length()), "UTF-8");
-    }
-
     for (int32_t i = 0; i < text.length(); i++) {
         UChar32 character = text.char32At(i);
 
@@ -99,9 +87,7 @@ std::string RepetitionNormalization(const std::string& textN) {
 
 std::string InvisibleCharacterNormalization(const std::string& textN) {
     icu::UnicodeString text = icu::UnicodeString::fromUTF8(textN);
-    if (text.length() == 0) {
-        text = icu::UnicodeString(textN.c_str(), static_cast<int32_t>(textN.length()), "UTF-8");
-    }
+
     icu::UnicodeString result;
 
     for (int32_t i = 0; i < text.length(); i++) {

@@ -1,5 +1,6 @@
 #include "service/leetspeak_normalization.hpp"
 #include "model/constants.hpp"
+#include "model/unicode_constants.hpp"
 #include <string>
 
 namespace LeetspeakNormalization {
@@ -10,28 +11,25 @@ const auto& homoglyphMap = TextProcessingConstants::LeetspeakMaps::homoglyphMap;
 
 std::string LeetspeakNormalization(const std::string& textN, bool isCyrillic) {
     icu::UnicodeString text = icu::UnicodeString::fromUTF8(textN);
-    if (text.length() == 0) {
-        text = icu::UnicodeString(textN.c_str(), textN.length(), "UTF-8");
-    }
 
     icu::UnicodeString result;
 
     for (int32_t i = 0; i < text.length(); i++) {
-        UChar32 c = text.char32At(i);
-        UChar32 normalized = c;
+        UChar32 character = text.char32At(i);
+        UChar32 normalized = character;
 
         if (isCyrillic) {
-            auto homoglyphText = homoglyphMap.find(c);
+            auto homoglyphText = homoglyphMap.find(character);
             if (homoglyphText != homoglyphMap.end()) {
                 normalized = homoglyphText->second;
             } else {
-                auto leetedTextCyrillic = cyrillicMap.find(c);
+                auto leetedTextCyrillic = cyrillicMap.find(character);
                 if (leetedTextCyrillic != cyrillicMap.end()) {
                     normalized = leetedTextCyrillic->second;
                 }
             }
         } else {
-            auto leetedText = latinMap.find(c);
+            auto leetedText = latinMap.find(character);
             if (leetedText != latinMap.end()) {
                 normalized = leetedText->second;
             }
@@ -51,22 +49,20 @@ std::string LeetspeakNormalization(const std::string& textN, bool isCyrillic) {
 bool IsPrimarilyCyrillic(const std::string& textN) {
     icu::UnicodeString text = icu::UnicodeString::fromUTF8(textN);
 
-    if (text.length() == 0) {
-        text = icu::UnicodeString(textN.c_str(), textN.length(), "UTF-8");
-    }
-
     int cyrillicCount = 0;
     int latinCount = 0;
 
     for (int32_t i = 0; i < text.length(); i++) {
-        UChar32 c = text.char32At(i);
-
-        // Cyrillic range: U+0400 to U+04FF
-        if (c >= 0x0400 && c <= 0x04FF) {
+        if (UChar32 character = text.char32At(i);
+            character >= unicode_constants::CYRILLIC_BLOCK_START &&
+            character <= unicode_constants::CYRILLIC_BLOCK_END) {
             cyrillicCount++;
-        } else if ((c >= 0x0041 && c <= 0x005A) || (c >= 0x0061 && c <= 0x007A)) {
+        } else if ((character >= unicode_constants::LATIN_UPPERCASE_START &&
+                    character <= unicode_constants::LATIN_UPPERCASE_END) ||
+                   (character >= unicode_constants::LATIN_LOWERCASE_START &&
+                    character <= unicode_constants::LATIN_LOWERCASE_END)) {
             latinCount++;
-        } // Latin range
+        }
 
         if (U16_IS_LEAD(text.charAt(i))) {
             i++;
