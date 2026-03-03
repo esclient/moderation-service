@@ -16,7 +16,7 @@ jobs:
     uses: esclient/tools/.github/workflows/lint-and-test-cpp.yml@cpp-workflow
     with:
       sonar-inclusions: "src/**,tests/**"
-      sonar-exclusions: "**/generated/**,**/grpc/**,tests/mocks/**, tests/unit/**"
-      sonar-coverage-exclusions: "tests/mocks/**, tests/unit/**,src/moderationservice/main.cpp,src/moderationservice/server/server.cpp"
+      sonar-exclusions: "**/generated/**,**/grpc/**,tests/mocks/**,tests/unit/**"
+      sonar-coverage-exclusions: "tests/mocks/**,tests/unit/**,src/moderationservice/main.cpp,src/moderationservice/server/server.cpp"
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
