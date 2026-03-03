@@ -10,10 +10,7 @@ const auto& forbiddenWords = TextProcessingConstants::HashTrieMaps::forbiddenWor
 std::vector<std::string> Tokenize(const std::string& textN) {
     std::vector<std::string> tokens;
     icu::UnicodeString text = icu::UnicodeString::fromUTF8(textN);
-    if (text.length() == 0) {
-        const auto length = static_cast<int32_t>(textN.length());
-        text = icu::UnicodeString(textN.c_str(), length, "UTF-8");
-    }
+
     std::string currentWord;
 
     for (int32_t i = 0; i < text.length(); i++) {

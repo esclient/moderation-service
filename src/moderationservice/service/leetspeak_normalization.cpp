@@ -11,10 +11,6 @@ const auto& homoglyphMap = TextProcessingConstants::LeetspeakMaps::homoglyphMap;
 
 std::string LeetspeakNormalization(const std::string& textN, bool isCyrillic) {
     icu::UnicodeString text = icu::UnicodeString::fromUTF8(textN);
-    if (text.length() == 0) {
-        const auto length = static_cast<int32_t>(textN.length());
-        text = icu::UnicodeString(textN.c_str(), length, "UTF-8");
-    }
 
     icu::UnicodeString result;
 
@@ -53,18 +49,12 @@ std::string LeetspeakNormalization(const std::string& textN, bool isCyrillic) {
 bool IsPrimarilyCyrillic(const std::string& textN) {
     icu::UnicodeString text = icu::UnicodeString::fromUTF8(textN);
 
-    if (text.length() == 0) {
-        const auto length = static_cast<int32_t>(textN.length());
-        text = icu::UnicodeString(textN.c_str(), length, "UTF-8");
-    }
-
     int cyrillicCount = 0;
     int latinCount = 0;
 
     for (int32_t i = 0; i < text.length(); i++) {
 
-        if (UChar32 character = text.char32At(i); 
-            character >= unicode_constants::CYRILLIC_BLOCK_START &&
+        if (UChar32 character = text.char32At(i); character >= unicode_constants::CYRILLIC_BLOCK_START &&
             character <= unicode_constants::CYRILLIC_BLOCK_END) {
             cyrillicCount++;
         } else if ((character >= unicode_constants::LATIN_UPPERCASE_START &&

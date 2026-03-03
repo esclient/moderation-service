@@ -87,3 +87,7 @@ add_service_test(handler_test
     ${CMAKE_CURRENT_SOURCE_DIR}/mocks/mock_kafka_client.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mocks/test_utils.cpp
 )
+
+add_service_test(leetspeak_normalization_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/unit/service/leetspeak_normalization_test.cpp
+)

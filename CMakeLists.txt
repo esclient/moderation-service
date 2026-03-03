@@ -90,10 +90,7 @@ add_custom_command(
 # Create library from generated sources
 add_library(${GENPROTO_LIB} ${PROTO_SRCS} ${PROTO_HDRS} ${GRPC_SRCS} ${GRPC_HDRS})
 
-target_include_directories(${GENPROTO_LIB}
-    PUBLIC
-        ${GENPROTO_DIR}
-)
+target_include_directories(${GENPROTO_LIB} PUBLIC ${GENPROTO_DIR})
 
 target_link_libraries(${GENPROTO_LIB} PUBLIC protobuf::libprotobuf gRPC::grpc++ abseil::abseil)
 
