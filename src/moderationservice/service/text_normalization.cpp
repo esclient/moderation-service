@@ -87,7 +87,7 @@ std::string RepetitionNormalization(const std::string& textN) {
 
 std::string InvisibleCharacterNormalization(const std::string& textN) {
     icu::UnicodeString text = icu::UnicodeString::fromUTF8(textN);
-   
+
     icu::UnicodeString result;
 
     for (int32_t i = 0; i < text.length(); i++) {
