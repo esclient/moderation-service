@@ -17,18 +17,28 @@ build-linux: fetch-proto
     cmake --build build --config Release
 
 build-windows: fetch-proto
-    conan install . --output-folder=build --build=missing
+    conan install . --output-folder=build --build=missing -s compiler.cppstd=17
     cmake -S . -B build \
         -G "Visual Studio 17 2022" \
         -A x64 \
         -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
-        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     cmake --build build --config Release
 
 kafka-container-up:
     docker-compose up -d
-    MSYS_NO_PATHCONV=1 docker exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic moderation-result --replication-factor 1 --partitions 3
-    MSYS_NO_PATHCONV=1 docker exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic moderation-request --replication-factor 1 --partitions 3
+    @echo "Waiting for Kafka to be ready..."
+    @for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do \
+        if docker exec kafka nc -z localhost 9092 2>/dev/null; then \
+            echo "Kafka is ready!"; \
+            break; \
+        fi; \
+        echo "Waiting for Kafka... attempt $$i/30"; \
+        sleep 2; \
+    done
+    MSYS_NO_PATHCONV=1 docker exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --if-not-exists --topic moderation-result --replication-factor 1 --partitions 3
+    MSYS_NO_PATHCONV=1 docker exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --if-not-exists --topic moderation-request --replication-factor 1 --partitions 3
 
 kafka-container-down:
     MSYS_NO_PATHCONV=1 docker exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic moderation-request
