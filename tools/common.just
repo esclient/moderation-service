@@ -69,18 +69,19 @@ run-w:
 
 check-dev-tools:
     @echo "Checking linting tools:"
-    @which clang-format >/dev/null 2>&1 && echo "✓ clang-format" || echo "✗ clang-format"
-    @which clang-tidy >/dev/null 2>&1 && echo "✓ clang-tidy" || echo "✗ clang-tidy"
-    @which cppcheck >/dev/null 2>&1 && echo "✓ cppcheck" || echo "✗ cppcheck"
-    @which cpplint >/dev/null 2>&1 && echo "✓ cpplint" || echo "✗ cpplint"
-    @which cmake-format >/dev/null 2>&1 && echo "✓ cmake-format" || echo "✗ cmake-format"
-    @which pipx >/dev/null 2>&1 && echo "✓ pipx" || echo "✗ pipx"
+    @which clang-format >/dev/null 2>&1 && echo "[OK] clang-format" || echo "[X] clang-format"
+    @which clang-tidy >/dev/null 2>&1 && echo "[OK] clang-tidy" || echo "[X] clang-tidy"
+    @which cppcheck >/dev/null 2>&1 && echo "[OK] cppcheck" || echo "[X] cppcheck"
+    @which cpplint >/dev/null 2>&1 && echo "[OK] cpplint" || echo "[X] cpplint"
+    @which cmake-format >/dev/null 2>&1 && echo "[OK] cmake-format" || echo "[X] cmake-format"
+    @which pipx >/dev/null 2>&1 && echo "[OK] pipx" || echo "[X] pipx"
 
 install-dev-tools:
     chmod +x ./tools/install_dev_tools.sh
     ./tools/install_dev_tools.sh
 
 upgrade-python-tools:
+    @which pipx >/dev/null 2>&1 || (echo "[X] pipx not found. Run 'just install-dev-tools' first." && exit 1)
     pipx upgrade cpplint
     pipx upgrade cmakelang
 
