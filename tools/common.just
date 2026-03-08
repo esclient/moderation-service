@@ -17,7 +17,7 @@ build-linux: fetch-proto
     cmake --build build --config Release
 
 build-windows: fetch-proto
-    conan install . --output-folder=build --build=missing -s compiler.cppstd=17
+    conan install . --output-folder=build --build=missing -s compiler.cppstd=20
     cmake -S . -B build \
         -G "Visual Studio 17 2022" \
         -A x64 \
