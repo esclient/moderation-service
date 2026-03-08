@@ -89,15 +89,15 @@ if ! $PYTHON_CMD -m pip --version &> /dev/null; then
     echo -e "${YELLOW}⚠ pip module not found, installing...${NC}"
     if [[ "$IS_LINUX" == "true" || "$IS_WSL" == "true" ]]; then
         if command -v apt-get &> /dev/null; then
-            sudo apt-get install -y python3-pip python3-venv
+            ${SUDO_CMD:-sudo} apt-get install -y python3-pip python3-venv
         elif command -v dnf &> /dev/null; then
-            sudo dnf install -y python3-pip
+            ${SUDO_CMD:-sudo} dnf install -y python3-pip
         elif command -v yum &> /dev/null; then
-            sudo yum install -y python3-pip
+            ${SUDO_CMD:-sudo} yum install -y python3-pip
         elif command -v pacman &> /dev/null; then
-            sudo pacman -S --noconfirm python-pip
+            ${SUDO_CMD:-sudo} pacman -S --noconfirm python-pip
         elif command -v zypper &> /dev/null; then
-            sudo zypper install -y python3-pip
+            ${SUDO_CMD:-sudo} zypper install -y python3-pip
         fi
     fi
     
@@ -159,8 +159,20 @@ elif [[ "$IS_LINUX" == "true" || "$IS_WSL" == "true" ]]; then
     # Detect package manager
     if command -v apt-get &> /dev/null; then
         echo "Detected: Debian/Ubuntu (apt-get)"
+        
+        # Check if we need sudo
+        SUDO_CMD=""
+        if [ "$EUID" -ne 0 ]; then
+            if command -v sudo &> /dev/null; then
+                SUDO_CMD="sudo"
+            else
+                echo -e "${RED}[X] This script requires root privileges or sudo${NC}"
+                exit 1
+            fi
+        fi
+        
         echo "Updating package lists..."
-        sudo apt-get update -qq
+        $SUDO_CMD apt-get update -qq
         
         PACKAGES_TO_INSTALL=()
         
@@ -175,13 +187,23 @@ elif [[ "$IS_LINUX" == "true" || "$IS_WSL" == "true" ]]; then
         
         if [ ${#PACKAGES_TO_INSTALL[@]} -gt 0 ]; then
             echo "Installing: ${PACKAGES_TO_INSTALL[*]}"
-            sudo apt-get install -y "${PACKAGES_TO_INSTALL[@]}"
+            $SUDO_CMD apt-get install -y "${PACKAGES_TO_INSTALL[@]}"
         else
             echo -e "${GREEN}[OK] All system packages already installed${NC}"
         fi
         
     elif command -v dnf &> /dev/null; then
         echo "Detected: Fedora/RHEL (dnf)"
+        
+        SUDO_CMD=""
+        if [ "$EUID" -ne 0 ]; then
+            if command -v sudo &> /dev/null; then
+                SUDO_CMD="sudo"
+            else
+                echo -e "${RED}[X] This script requires root privileges or sudo${NC}"
+                exit 1
+            fi
+        fi
         
         PACKAGES_TO_INSTALL=()
         
@@ -193,13 +215,23 @@ elif [[ "$IS_LINUX" == "true" || "$IS_WSL" == "true" ]]; then
         
         if [ ${#PACKAGES_TO_INSTALL[@]} -gt 0 ]; then
             echo "Installing: ${PACKAGES_TO_INSTALL[*]}"
-            sudo dnf install -y "${PACKAGES_TO_INSTALL[@]}"
+            $SUDO_CMD dnf install -y "${PACKAGES_TO_INSTALL[@]}"
         else
             echo -e "${GREEN}[OK] All system packages already installed${NC}"
         fi
         
     elif command -v yum &> /dev/null; then
         echo "Detected: CentOS/RHEL (yum)"
+        
+        SUDO_CMD=""
+        if [ "$EUID" -ne 0 ]; then
+            if command -v sudo &> /dev/null; then
+                SUDO_CMD="sudo"
+            else
+                echo -e "${RED}[X] This script requires root privileges or sudo${NC}"
+                exit 1
+            fi
+        fi
         
         PACKAGES_TO_INSTALL=()
         
@@ -211,13 +243,23 @@ elif [[ "$IS_LINUX" == "true" || "$IS_WSL" == "true" ]]; then
         
         if [ ${#PACKAGES_TO_INSTALL[@]} -gt 0 ]; then
             echo "Installing: ${PACKAGES_TO_INSTALL[*]}"
-            sudo yum install -y "${PACKAGES_TO_INSTALL[@]}"
+            $SUDO_CMD yum install -y "${PACKAGES_TO_INSTALL[@]}"
         else
             echo -e "${GREEN}[OK] All system packages already installed${NC}"
         fi
         
     elif command -v pacman &> /dev/null; then
         echo "Detected: Arch Linux (pacman)"
+        
+        SUDO_CMD=""
+        if [ "$EUID" -ne 0 ]; then
+            if command -v sudo &> /dev/null; then
+                SUDO_CMD="sudo"
+            else
+                echo -e "${RED}[X] This script requires root privileges or sudo${NC}"
+                exit 1
+            fi
+        fi
         
         PACKAGES_TO_INSTALL=()
         
@@ -229,13 +271,23 @@ elif [[ "$IS_LINUX" == "true" || "$IS_WSL" == "true" ]]; then
         
         if [ ${#PACKAGES_TO_INSTALL[@]} -gt 0 ]; then
             echo "Installing: ${PACKAGES_TO_INSTALL[*]}"
-            sudo pacman -S --noconfirm "${PACKAGES_TO_INSTALL[@]}"
+            $SUDO_CMD pacman -S --noconfirm "${PACKAGES_TO_INSTALL[@]}"
         else
             echo -e "${GREEN}[OK] All system packages already installed${NC}"
         fi
         
     elif command -v zypper &> /dev/null; then
         echo "Detected: openSUSE (zypper)"
+        
+        SUDO_CMD=""
+        if [ "$EUID" -ne 0 ]; then
+            if command -v sudo &> /dev/null; then
+                SUDO_CMD="sudo"
+            else
+                echo -e "${RED}[X] This script requires root privileges or sudo${NC}"
+                exit 1
+            fi
+        fi
         
         PACKAGES_TO_INSTALL=()
         
@@ -247,7 +299,7 @@ elif [[ "$IS_LINUX" == "true" || "$IS_WSL" == "true" ]]; then
         
         if [ ${#PACKAGES_TO_INSTALL[@]} -gt 0 ]; then
             echo "Installing: ${PACKAGES_TO_INSTALL[*]}"
-            sudo zypper install -y "${PACKAGES_TO_INSTALL[@]}"
+            $SUDO_CMD zypper install -y "${PACKAGES_TO_INSTALL[@]}"
         else
             echo -e "${GREEN}[OK] All system packages already installed${NC}"
         fi
@@ -310,7 +362,11 @@ install_python_tool() {
     
     # Try pipx first (preferred for Ubuntu 24.04+)
     if command -v pipx &> /dev/null; then
-        pipx install "$package_name" --force &> /dev/null && return 0
+        if pipx list 2>/dev/null | grep -q "$package_name"; then
+            echo -e "${GREEN}[OK] $tool_name already installed via pipx${NC}"
+            return 0
+        fi
+        pipx install "$package_name" &> /dev/null && return 0
     fi
     
     # Fallback to pip with --user
@@ -324,16 +380,32 @@ install_python_tool() {
 }
 
 # Conan
-install_python_tool "Conan" "conan" "command -v conan"
-if command -v conan &> /dev/null; then
+if ! command -v conan &> /dev/null; then
+    echo "Installing Conan..."
+    install_python_tool "Conan" "conan" "command -v conan"
+    if command -v conan &> /dev/null; then
+        conan profile detect --force 2>/dev/null || true
+    fi
+else
+    echo -e "${GREEN}[OK] Conan already installed${NC}"
     conan profile detect --force 2>/dev/null || true
 fi
 
 # cpplint
-install_python_tool "cpplint" "cpplint" "$PYTHON_CMD -c 'import cpplint'"
+if command -v cpplint &> /dev/null || $PYTHON_CMD -c 'import cpplint' 2>/dev/null; then
+    echo -e "${GREEN}[OK] cpplint already installed${NC}"
+else
+    echo "Installing cpplint..."
+    install_python_tool "cpplint" "cpplint" "command -v cpplint"
+fi
 
 # cmakelang (cmake-format, cmake-lint)
-install_python_tool "cmakelang" "cmakelang" "$PYTHON_CMD -c 'import cmakelang'"
+if command -v cmake-format &> /dev/null || $PYTHON_CMD -c 'import cmakelang' 2>/dev/null; then
+    echo -e "${GREEN}[OK] cmakelang already installed${NC}"
+else
+    echo "Installing cmakelang..."
+    install_python_tool "cmakelang" "cmakelang" "command -v cmake-format"
+fi
 
 echo ""
 
@@ -349,7 +421,7 @@ if ! command -v just &> /dev/null; then
     elif [[ "$IS_LINUX" == "true" || "$IS_WSL" == "true" ]]; then
         if command -v snap &> /dev/null; then
             echo "Installing just via snap..."
-            sudo snap install just --classic
+            ${SUDO_CMD:-sudo} snap install just --classic
         elif command -v cargo &> /dev/null; then
             echo "Installing just via cargo..."
             cargo install just
@@ -372,8 +444,8 @@ if ! command -v just &> /dev/null; then
                 JUST_URL="https://github.com/casey/just/releases/download/${JUST_VERSION}/just-${JUST_VERSION}-${JUST_ARCH}-unknown-linux-musl.tar.gz"
                 echo "Downloading from: $JUST_URL"
                 curl -L "$JUST_URL" | tar xz -C /tmp
-                sudo mv /tmp/just /usr/local/bin/just
-                sudo chmod +x /usr/local/bin/just
+                ${SUDO_CMD:-sudo} mv /tmp/just /usr/local/bin/just
+                ${SUDO_CMD:-sudo} chmod +x /usr/local/bin/just
             fi
         fi
     fi
