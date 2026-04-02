@@ -26,3 +26,6 @@
     librdkafka/*:sasl=True
     benchmark/*:shared=False
     benchmark/*:enable_lto=True
+    protobuf/*:shared=False
+    icu/*:shared=False
+    

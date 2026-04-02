@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(moderation-service)
 enable_testing()
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 if(MSVC)
     add_compile_options(/utf-8)
@@ -94,10 +94,9 @@ target_include_directories(${GENPROTO_LIB} PUBLIC ${GENPROTO_DIR})
 
 target_link_libraries(${GENPROTO_LIB} PUBLIC protobuf::libprotobuf gRPC::grpc++ abseil::abseil)
 
-# link source files
-add_executable(
-    ${PROJECT_NAME}
-    src/moderationservice/main.cpp
+# Shared service implementation (everything except the process entrypoint)
+add_library(
+    moderation_core STATIC
     src/moderationservice/server/server.cpp
     src/moderationservice/service/service.cpp
     src/moderationservice/handler/handler.cpp
@@ -110,25 +109,39 @@ add_executable(
     src/moderationservice/kafka/kafkaclient.cpp
     src/moderationservice/model/model_utils.cpp)
 
+target_include_directories(
+    moderation_core
+    PUBLIC ${PROJECT_SOURCE_DIR}/include
+           ${PROJECT_SOURCE_DIR}/src/moderationservice
+           ${PROJECT_SOURCE_DIR}/src/moderationservice/repository
+           ${PROJECT_SOURCE_DIR}/src/moderationservice/handler
+           ${PROJECT_SOURCE_DIR}/src/moderationservice/service
+           ${PROJECT_SOURCE_DIR}/src/moderationservice/model
+           ${PROJECT_SOURCE_DIR}/src/moderationservice/kafka
+           ${GENPROTO_DIR})
+
 target_link_libraries(
-    ${PROJECT_NAME}
-    PRIVATE ${GENPROTO_LIB}
-            gRPC::grpc++
-            gRPC::grpc++_reflection
-            protobuf::libprotobuf
-            ICU::uc
-            ICU::i18n
-            ICU::data
-            tsl::hat_trie
-            Threads::Threads
-            RdKafka::rdkafka
-            RdKafka::rdkafka++
-            libpqxx::pqxx
-            abseil::abseil)
+    moderation_core
+    PUBLIC ${GENPROTO_LIB}
+           gRPC::grpc++
+           gRPC::grpc++_reflection
+           protobuf::libprotobuf
+           ICU::uc
+           ICU::i18n
+           ICU::data
+           tsl::hat_trie
+           Threads::Threads
+           RdKafka::rdkafka
+           RdKafka::rdkafka++
+           libpqxx::pqxx
+           abseil::abseil)
 
 if(WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE U_STATIC_IMPLEMENTATION)
+    target_compile_definitions(moderation_core PRIVATE U_STATIC_IMPLEMENTATION)
 endif()
+
+add_executable(${PROJECT_NAME} src/moderationservice/main.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE moderation_core)
 
 set(PROJECT_SOURCE_DIRS ${PROJECT_SOURCE_DIR}/src/moderationservice ${PROJECT_SOURCE_DIR}/include
                         ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/benchmark)
@@ -292,18 +305,6 @@ set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH ${_OLD_CMAKE_FIND_USE_SYSTEM_ENVIRONM
 # ============================================================================
 # END LINTING SECTION
 # ============================================================================
-
-# link header files
-target_include_directories(
-    ${PROJECT_NAME}
-    PUBLIC ${PROJECT_SOURCE_DIR}/include
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/moderationservice
-            ${PROJECT_SOURCE_DIR}/src/moderationservice/repository
-            ${PROJECT_SOURCE_DIR}/src/moderationservice/handler
-            ${PROJECT_SOURCE_DIR}/src/moderationservice/service
-            ${PROJECT_SOURCE_DIR}/src/moderationservice/model
-            ${PROJECT_SOURCE_DIR}/src/moderationservice/kafka
-            ${GENPROTO_DIR})
 
 add_subdirectory(tests)
 
