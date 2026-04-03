@@ -5,6 +5,12 @@ DOWN_OUT := '-o'
 EXE := if os() == "windows" { ".exe" } else { "" }
 TEST_DIR := if os() == "windows" { "./build/tests/Release" } else { "./build/tests" }
 
+CACHE_TOOL := `which sccache 2>/dev/null || which ccache 2>/dev/null || echo ""`
+
+# Parallel jobs for Linux (nproc with getconf fallback)
+JOBS := if os() == "windows" { "" } else { `nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4` }
+PARALLEL := if os() == "windows" { "" } else { "-j" + JOBS }
+
 fetch-proto:
     {{MKDIR}} "{{TMP_DIR}}"
     {{DOWN}} "https://raw.githubusercontent.com/esclient/protos/{{PROTO_TAG}}/{{PROTO_NAME}}" {{DOWN_OUT}} "{{TMP_DIR}}/{{PROTO_NAME}}"
@@ -13,8 +19,9 @@ build-linux: fetch-proto
     conan install . --output-folder=build --build=missing --settings compiler.cppstd=20
     cmake -S . -B build \
         -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
-        -DCMAKE_BUILD_TYPE=Release
-    cmake --build build --config Release
+        -DCMAKE_BUILD_TYPE=Release \
+        {{ if CACHE_TOOL != "" { "-DCMAKE_C_COMPILER_LAUNCHER=" + CACHE_TOOL + " -DCMAKE_CXX_COMPILER_LAUNCHER=" + CACHE_TOOL } else { "" } }}
+    cmake --build build --config Release -- {{PARALLEL}}
 
 build-windows: fetch-proto
     conan install . --output-folder=build --build=missing --settings compiler.cppstd=20
@@ -24,6 +31,26 @@ build-windows: fetch-proto
         -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
         -DCMAKE_BUILD_TYPE=Release
     cmake --build build --config Release
+
+configure-lint: fetch-proto
+    conan install . --output-folder=build-lint --build=missing -c tools.cmake.cmaketoolchain:generator=Ninja
+    cmake -S . -B build-lint \
+        -G "Ninja" \
+        -DCMAKE_TOOLCHAIN_FILE=build-lint/conan_toolchain.cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DENABLE_CLANG_TIDY=ON \
+        {{ if CACHE_TOOL != "" { "-DCMAKE_C_COMPILER_LAUNCHER=" + CACHE_TOOL + " -DCMAKE_CXX_COMPILER_LAUNCHER=" + CACHE_TOOL } else { "" } }}
+
+format:
+    cmake --build build-lint --target clang-format -- {{PARALLEL}}
+    cmake --build build-lint --target cmake-format
+
+lint-all-linux:
+    just configure-lint
+    just format
+    cmake --build build-lint -- {{PARALLEL}}
+    cmake --build build-lint --target lint-all -- {{PARALLEL}}
 
 kafka-container-up:
     docker-compose up -d
@@ -36,33 +63,14 @@ kafka-container-down:
     MSYS_NO_PATHCONV=1 docker exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic moderation-result
     docker-compose down -vv
 
-configure-lint: fetch-proto
-    conan install . --output-folder=build-lint --build=missing -c tools.cmake.cmaketoolchain:generator=Ninja
-    cmake -S . -B build-lint \
-        -G "Ninja" \
-        -DCMAKE_TOOLCHAIN_FILE=build-lint/conan_toolchain.cmake \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-        -DENABLE_CLANG_TIDY=ON
-
-format:
-    cmake --build build-lint --target clang-format
-    cmake --build build-lint --target cmake-format
-
 clean-lint:
     rm -rf build-lint
-
-lint-all-linux:
-    just configure-lint
-    just format
-    cmake --build build-lint
-    cmake --build build-lint --target lint-all 
 
 run-l:
     just build-linux
     ENV=dev tools/load_envs.sh ./build/moderation-service
 
-run-w: 
+run-w:
     just build-windows
     ENV=dev tools/load_envs.sh ./build/Release/moderation-service.exe
 
@@ -74,6 +82,11 @@ check-dev-tools:
     @which cpplint >/dev/null 2>&1 && echo "[OK] cpplint" || echo "[X] cpplint"
     @which cmake-format >/dev/null 2>&1 && echo "[OK] cmake-format" || echo "[X] cmake-format"
     @which pipx >/dev/null 2>&1 && echo "[OK] pipx" || echo "[X] pipx"
+    @echo ""
+    @echo "Checking compiler cache:"
+    @which sccache >/dev/null 2>&1 && echo "[OK] sccache (preferred)" || echo "[X] sccache"
+    @which ccache >/dev/null 2>&1 && echo "[OK] ccache (fallback)" || echo "[X] ccache"
+    @echo "Active cache tool: {{CACHE_TOOL}}"
 
 install-dev-tools:
     chmod +x ./tools/install_dev_tools.sh
