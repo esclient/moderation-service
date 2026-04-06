@@ -12,38 +12,20 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 set(TEST_DEPS 
-    genproto_lib 
     Threads::Threads
 )
 
-set(SERVICE_TEST_SOURCES
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/service/text_normalization.cpp
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/service/leetspeak_normalization.cpp
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/service/word_checker.cpp
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/service/text_processor.cpp
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/model/constants.cpp
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/model/model_utils.cpp
-)
-
 function(add_service_test TEST_NAME)
-    add_executable(${TEST_NAME} ${ARGN} ${SERVICE_TEST_SOURCES})
-
+    add_executable(${TEST_NAME} ${ARGN})
     target_include_directories(${TEST_NAME} PRIVATE
-    ${CMAKE_SOURCE_DIR}/src/moderationservice 
-    ${CMAKE_SOURCE_DIR}/include 
-    ${CMAKE_SOURCE_DIR}/tests
-    ${GENPROTO_DIR}
+        ${CMAKE_SOURCE_DIR}/src/moderationservice
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/tests
+        ${GENPROTO_DIR}
     )
-
-    target_link_libraries(${TEST_NAME} PRIVATE 
-        GTest::gtest_main 
-        ${GENPROTO_LIB} 
-        ICU::uc ICU::i18n 
-        ICU::data 
-        tsl::hat_trie
-        libpqxx::pqxx
-        RdKafka::rdkafka
-        RdKafka::rdkafka++
+    target_link_libraries(${TEST_NAME} PRIVATE
+        GTest::gtest_main
+        moderation_core
         ${TEST_DEPS}
     )
     gtest_discover_tests(${TEST_NAME} DISCOVERY_MODE PRE_TEST)
@@ -71,18 +53,13 @@ add_service_test(text_processor_test
 
 add_service_test(moderation_service_test
     ${CMAKE_CURRENT_SOURCE_DIR}/unit/service/moderation_service_test.cpp
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/service/service.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mocks/fake_moderation_repository.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mocks/mock_kafka_client.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mocks/test_utils.cpp
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/kafka/kafkaclient.cpp 
 )
 
 add_service_test(handler_test
     ${CMAKE_CURRENT_SOURCE_DIR}/unit/handler/handler_test.cpp
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/handler/handler.cpp
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/service/service.cpp
-    ${CMAKE_SOURCE_DIR}/src/moderationservice/kafka/kafkaclient.cpp  
     ${CMAKE_CURRENT_SOURCE_DIR}/mocks/fake_moderation_repository.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mocks/mock_kafka_client.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mocks/test_utils.cpp

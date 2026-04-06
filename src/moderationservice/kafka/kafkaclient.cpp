@@ -196,7 +196,8 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message) {
         std::string key_str(key_ptr, message->key_len());
 
         // Validate that key_str contains only digits (and optional leading +/-)
-        if (key_str.empty() || (!std::isdigit(key_str[0]) && key_str[0] != '-' && key_str[0] != '+')) {
+        if (key_str.empty() ||
+            (!std::isdigit(key_str[0]) && key_str[0] != '-' && key_str[0] != '+')) {
             std::cerr << "Invalid message key format (not numeric): '" << key_str << "'\n";
             return;
         }
@@ -204,7 +205,8 @@ void KafkaConsumer::ProcessMessage(RdKafka::Message* message) {
         try {
             request_id = std::stoll(key_str);
         } catch (const std::exception& e) {
-            std::cerr << "Failed to parse message key '" << key_str << "' to request ID: " << e.what() << "\n";
+            std::cerr << "Failed to parse message key '" << key_str
+                      << "' to request ID: " << e.what() << "\n";
             return;
         }
     }
