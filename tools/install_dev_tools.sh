@@ -319,6 +319,79 @@ fi
 echo ""
 
 # ============================================================================
+# Install Compiler Cache (sccache preferred, ccache fallback)
+# ============================================================================
+echo -e "${CYAN}=== Installing Compiler Cache ===${NC}"
+
+if command -v sccache &> /dev/null; then
+    echo -e "${GREEN}[OK] sccache already installed${NC}"
+elif command -v ccache &> /dev/null; then
+    echo -e "${GREEN}[OK] ccache already installed (sccache not available)${NC}"
+else
+    CACHE_INSTALLED=false
+
+    if [[ "$IS_WINDOWS" == "true" ]]; then
+        echo "Installing sccache via Chocolatey..."
+        choco install sccache -y && CACHE_INSTALLED=true
+
+    elif [[ "$IS_LINUX" == "true" || "$IS_WSL" == "true" ]]; then
+        # Try cargo first (most up-to-date)
+        if command -v cargo &> /dev/null; then
+            echo "Installing sccache via cargo..."
+            cargo install sccache && CACHE_INSTALLED=true
+
+        # Try GitHub releases binary
+        else
+            echo "Installing sccache from GitHub releases..."
+            SCCACHE_VERSION="v0.9.1"
+            ARCH=$(uname -m)
+            if [[ "$ARCH" == "x86_64" ]]; then
+                SCCACHE_ARCH="x86_64-unknown-linux-musl"
+            elif [[ "$ARCH" == "aarch64" ]]; then
+                SCCACHE_ARCH="aarch64-unknown-linux-musl"
+            else
+                echo -e "${YELLOW}⚠ Unsupported arch for sccache binary: $ARCH${NC}"
+                SCCACHE_ARCH=""
+            fi
+
+            if [[ -n "$SCCACHE_ARCH" ]]; then
+                SCCACHE_URL="https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/sccache-${SCCACHE_VERSION}-${SCCACHE_ARCH}.tar.gz"
+                echo "Downloading from: $SCCACHE_URL"
+                curl -fsSL "$SCCACHE_URL" | tar xz -C /tmp
+                ${SUDO_CMD:-sudo} mv /tmp/sccache-${SCCACHE_VERSION}-${SCCACHE_ARCH}/sccache /usr/local/bin/sccache
+                ${SUDO_CMD:-sudo} chmod +x /usr/local/bin/sccache
+                CACHE_INSTALLED=true
+            fi
+        fi
+
+        # ccache as fallback if sccache failed
+        if [[ "$CACHE_INSTALLED" == "false" ]]; then
+            echo -e "${YELLOW}⚠ sccache install failed, falling back to ccache...${NC}"
+            if command -v apt-get &> /dev/null; then
+                ${SUDO_CMD:-sudo} apt-get install -y ccache && CACHE_INSTALLED=true
+            elif command -v dnf &> /dev/null; then
+                ${SUDO_CMD:-sudo} dnf install -y ccache && CACHE_INSTALLED=true
+            elif command -v yum &> /dev/null; then
+                ${SUDO_CMD:-sudo} yum install -y ccache && CACHE_INSTALLED=true
+            elif command -v pacman &> /dev/null; then
+                ${SUDO_CMD:-sudo} pacman -S --noconfirm ccache && CACHE_INSTALLED=true
+            elif command -v zypper &> /dev/null; then
+                ${SUDO_CMD:-sudo} zypper install -y ccache && CACHE_INSTALLED=true
+            fi
+        fi
+    fi
+
+    if [[ "$CACHE_INSTALLED" == "true" ]]; then
+        CACHE_TOOL=$(command -v sccache 2>/dev/null || command -v ccache 2>/dev/null || echo "none")
+        echo -e "${GREEN}[OK] Compiler cache installed: $CACHE_TOOL${NC}"
+    else
+        echo -e "${YELLOW}⚠ No compiler cache installed — builds will work but won't be cached${NC}"
+    fi
+fi
+
+echo ""
+
+# ============================================================================
 # Setup Python Environment
 # ============================================================================
 echo -e "${CYAN}=== Setting up Python Environment ===${NC}"
@@ -497,6 +570,16 @@ else
 fi
 
 check_tool "just" "command -v just"
+
+# Compiler cache (one of the two is enough)
+if command -v sccache &> /dev/null; then
+    echo -e "${GREEN}[OK]${NC} sccache (compiler cache)"
+elif command -v ccache &> /dev/null; then
+    echo -e "${GREEN}[OK]${NC} ccache (compiler cache fallback)"
+else
+    echo -e "${YELLOW}[~]${NC} compiler cache - not installed (optional but recommended)"
+    # Not setting FAILED=1 since this is optional
+fi
 
 echo ""
 

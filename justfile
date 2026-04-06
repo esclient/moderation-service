@@ -1,7 +1,7 @@
 set windows-shell := ["sh", "-c"]
 set dotenv-load := true
 
-COMMON_JUST_URL := 'https://raw.githubusercontent.com/esclient/tools/refs/heads/main/cpp/common.just'
+COMMON_JUST_URL := 'https://raw.githubusercontent.com/esclient/tools/refs/heads/linting-job-optimization/cpp/common.just'
 LOAD_ENVS_URL := 'https://raw.githubusercontent.com/esclient/tools/refs/heads/main/load_envs.sh'
 
 PROTO_TAG := 'v0.1.3'
