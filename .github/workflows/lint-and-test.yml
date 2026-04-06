@@ -13,4 +13,4 @@ permissions:
 
 jobs:
   lint-and-test:
-    uses: esclient/tools/.github/workflows/lint-and-test-cpp.yml@linting-job-optimization
+    uses: esclient/tools/.github/workflows/lint-and-test-cpp.yml@main

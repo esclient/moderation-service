@@ -17,5 +17,3 @@ To build and run you need the following installed:
 -Internet connection (Optional)
 -Electricity (Recommended)
 -Antidepressants(Recommended)
-
-test
