@@ -3,6 +3,7 @@
 #include "model/constants.hpp"
 #include "model/model_utils.hpp"
 #include "service/text_processor.hpp"
+#include "interceptors/logger.hpp"
 #include <iostream>
 #include <memory>
 #include <string>
@@ -22,16 +23,29 @@ void KafkaClient::Initialize(std::function<void(const moderation::ModerateObject
         consumer_ =
             std::make_unique<KafkaConsumer>(config_, std::move(result_callback), producer_.get());
         initialized_ = true;
-        std::cout << "KafkaClient initialized successfully.\n";
+        SERVICE_VLOG1(absl::StrCat(
+            "kafka initialized successfully, producer and consumer created",
+            " topic=", message.topic_name(),
+            " partition=", message.partition(),
+            " offset=", message.offset()
+        ));
     } catch (const std::exception& e) {
-        std::cerr << "Failed to initialize KafkaClient: " << e.what() << "\n";
+        SERVICE_LOG_ERROR(
+            moderation::logging::Subsystem::kKafka,
+            "INITIALIZATION_FAIL",         
+            e.what()              
+        );
         throw;
     }
 }
 
 bool KafkaClient::SendRequestAsync(const moderation::ModerateObjectRequest& request) {
     if (!initialized_ || !producer_) {
-        std::cerr << "KafkaClient not initialized.\n";
+        SERVICE_LOG_ERROR(
+            moderation::logging::Subsystem::kKafka,
+            "NOT_INITIALIZED",
+            "KafkaClient not initialized at requesting time"
+        );
         return false;
     }
     return producer_->SendRequestAsync(request, config_.request_topic);
@@ -39,10 +53,21 @@ bool KafkaClient::SendRequestAsync(const moderation::ModerateObjectRequest& requ
 
 void ProducerDeliveryReportCb::dr_cb(RdKafka::Message& message) {
     if (message.err() == RdKafka::ERR_NO_ERROR) {
-        std::cout << "Message delivered to topic " << message.topic_name() << ", partition "
-                  << message.partition() << ", offset " << message.offset() << "\n";
+        SERVICE_VLOG1(absl::StrCat(
+            "kafka message delivered",
+            " topic=", message.topic_name(),
+            " partition=", message.partition(),
+            " offset=", message.offset()
+        ));
     } else {
-        std::cerr << "Message delivery failed: " << message.errstr() << "\n";
+        SERVICE_LOG_ERROR(
+            moderation::logging::Subsystem::kKafka,
+            message.err(),                          
+            absl::StrCat("delivery failed"
+                        " topic=", message.topic_name(),
+                        " partition=", message.partition(),
+                        " error=", message.errstr())  
+        );
     }
 }
 
