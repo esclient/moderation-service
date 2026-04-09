@@ -95,13 +95,35 @@ inline absl::string_view Explain(Subsystem subsystem, absl::string_view code) {
     return "operation failed, inspect subsystem-specific context";
 }
 
-template <typename CodeT>
+inline absl::string_view GrpcCodeName(grpc::StatusCode code) {
+    switch (code) {
+        case grpc::StatusCode::OK: return "OK";
+        case grpc::StatusCode::CANCELLED: return "CANCELLED";
+        case grpc::StatusCode::UNKNOWN: return "UNKNOWN";
+        case grpc::StatusCode::INVALID_ARGUMENT: return "INVALID_ARGUMENT";
+        case grpc::StatusCode::DEADLINE_EXCEEDED: return "DEADLINE_EXCEEDED";
+        case grpc::StatusCode::NOT_FOUND: return "NOT_FOUND";
+        case grpc::StatusCode::ALREADY_EXISTS: return "ALREADY_EXISTS";
+        case grpc::StatusCode::PERMISSION_DENIED: return "PERMISSION_DENIED";
+        case grpc::StatusCode::RESOURCE_EXHAUSTED: return "RESOURCE_EXHAUSTED";
+        case grpc::StatusCode::FAILED_PRECONDITION: return "FAILED_PRECONDITION";
+        case grpc::StatusCode::ABORTED: return "ABORTED";
+        case grpc::StatusCode::OUT_OF_RANGE: return "OUT_OF_RANGE";
+        case grpc::StatusCode::UNIMPLEMENTED: return "UNIMPLEMENTED";
+        case grpc::StatusCode::INTERNAL: return "INTERNAL";
+        case grpc::StatusCode::UNAVAILABLE: return "UNAVAILABLE";
+        case grpc::StatusCode::DATA_LOSS: return "DATA_LOSS";
+        case grpc::StatusCode::UNAUTHENTICATED: return "UNAUTHENTICATED";
+        default: return "UNRECOGNIZED";
+    }
+}
+
 inline std::string FormatError(Subsystem subsystem, grpc::StatusCode code, absl::string_view message) {
     const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3SZ", absl::Now(), absl::UTCTimeZone());
     return absl::StrCat(
         "timespan=", timespan,
         " subsystem=", SubsystemName(subsystem),
-        " code=", grpc::StatusCodeToString(code),
+        " code=", GrpcCodeName(code),
         " message=\"", message, "\"",
         " explanation=\"", Explain(subsystem, code), "\"");
 }

@@ -19,11 +19,9 @@ class LoggerInterceptor final : public grpc::experimental::Interceptor {
             return;
         }
 
-        if (methods->QueryInterceptionHookPoint(
-                grpc::experimental::InterceptionHookPoints::POST_RECV_CLOSE_ON_SERVER)) {
-
+        const grpc::Status* status = methods->GetRecvStatus();
+        if (status != nullptr) {
             const auto latency_ms = absl::ToInt64Milliseconds(absl::Now() - start_);
-            const grpc::Status* status = methods->GetRecvStatus();
             const auto code = status ? status->error_code() : grpc::StatusCode::UNKNOWN;
 
             if (code == grpc::StatusCode::OK) {
