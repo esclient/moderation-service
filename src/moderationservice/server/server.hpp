@@ -1,6 +1,6 @@
 #pragma once
 
-#include "interceptors/logger.hpp"
+#include "interceptors/logger_interceptor.hpp"
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/impl/service_type.h>
 #include <grpcpp/security/server_credentials.h>

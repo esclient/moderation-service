@@ -1,17 +1,17 @@
 #include "config/config.hpp"
 #include "handler/handler.hpp"
+#include "interceptors/logger.hpp"
 #include "repository/repository.hpp"
 #include "server/server.hpp"
 #include "service/service.hpp"
 #include <csignal>
-#include <iostream>
 #include <memory>
 
 std::atomic<bool> shutdown_requested(false);
 std::shared_ptr<Server> global_server_ptr;
 
 void signalHandler(int signum) {
-    std::cout << "Interrupt signal (" << signum << ") received.\n";
+    SERVICE_LOG_INFO(absl::StrCat("interrupt signal received signal=", signum));
     shutdown_requested.store(true);
 
     if (global_server_ptr) {
@@ -49,15 +49,15 @@ int main() {
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
-        std::cout << "Shutting down server...\n";
+        SERVICE_LOG_INFO("shutting down server");
 
         kafkaClient->StopConsumer();
         kafkaClient->Flush();
         kafkaClient->Shutdown();
 
-        std::cout << "Server shutdown complete.\n";
+        SERVICE_LOG_INFO("server shutdown complete");
     } catch (const std::exception& e) {
-        std::cerr << "Main Fatal Error: " << e.what() << "\n";
+        SERVICE_LOG_ERROR(moderation::logging::Subsystem::kServer, "MAIN_FATAL_ERROR", e.what());
         return 1;
     }
 

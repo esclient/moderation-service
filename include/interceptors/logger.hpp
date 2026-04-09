@@ -10,6 +10,7 @@
 #include <grpcpp/support/status.h>
 #include <librdkafka/rdkafkacpp.h>
 #include <unicode/utypes.h>
+#include <string>
 
 namespace moderation::logging {
 
@@ -54,6 +55,10 @@ inline absl::string_view Explain(Subsystem, grpc::StatusCode code) {
     }
 }
 
+inline absl::string_view Explain(Subsystem, grpc::Status status) {
+    return Explain(Subsystem::kGrpc, status.error_code());
+}
+
 inline absl::string_view Explain(Subsystem, RdKafka::ErrorCode code) {
     switch (code) {
         case RdKafka::ERR__TRANSPORT:
@@ -91,17 +96,40 @@ inline absl::string_view Explain(Subsystem subsystem, absl::string_view code) {
 }
 
 template <typename CodeT>
-inline std::string FormatError(Subsystem subsystem, CodeT code, absl::string_view message) {
+inline std::string FormatError(Subsystem subsystem, grpc::StatusCode code, absl::string_view message) {
     const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3SZ", absl::Now(), absl::UTCTimeZone());
     return absl::StrCat(
         "timespan=", timespan,
         " subsystem=", SubsystemName(subsystem),
-        " code=", static_cast<int>(code),
+        " code=", grpc::StatusCodeToString(code),
         " message=\"", message, "\"",
         " explanation=\"", Explain(subsystem, code), "\"");
 }
 
-// overload for string-like codes
+inline std::string FormatError(Subsystem subsystem, grpc::Status status, absl::string_view message) {
+    return FormatError(subsystem, status.error_code(),
+                       absl::StrCat(message, " status_message=\"", status.error_message(), "\""));
+}
+
+inline std::string FormatError(Subsystem subsystem, RdKafka::ErrorCode code, absl::string_view message) {
+    const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3SZ", absl::Now(), absl::UTCTimeZone());
+    return absl::StrCat(
+        "timespan=", timespan,
+        " subsystem=", SubsystemName(subsystem),
+        " code=", RdKafka::err2str(code),
+        " message=\"", message, "\"",
+        " explanation=\"", Explain(subsystem, code), "\"");
+}
+
+inline std::string FormatError(Subsystem subsystem, UErrorCode code, absl::string_view message) {
+    const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3SZ", absl::Now(), absl::UTCTimeZone());
+    return absl::StrCat(
+        "timespan=", timespan,
+        " subsystem=", SubsystemName(subsystem),
+        " code=", u_errorName(code),
+        " message=\"", message, "\"",
+        " explanation=\"", Explain(subsystem, code), "\"");
+}
 
 inline std::string FormatError(Subsystem subsystem, absl::string_view code, absl::string_view message) {
     const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3SZ", absl::Now(), absl::UTCTimeZone());
@@ -111,6 +139,15 @@ inline std::string FormatError(Subsystem subsystem, absl::string_view code, absl
         " code=", code,
         " message=\"", message, "\"",
         " explanation=\"", Explain(subsystem, code), "\"");
+}
+
+inline std::string FormatError(Subsystem subsystem, const std::string& code,
+                               absl::string_view message) {
+    return FormatError(subsystem, absl::string_view(code), message);
+}
+
+inline std::string FormatError(Subsystem subsystem, const char* code, absl::string_view message) {
+    return FormatError(subsystem, absl::string_view(code ? code : "UNKNOWN"), message);
 }
 
 }  // namespace moderation::logging
