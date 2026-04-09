@@ -6,6 +6,7 @@
 #include "service/service.hpp"
 #include <csignal>
 #include <memory>
+#include <absl/log/globals.h>
 
 std::atomic<bool> shutdown_requested(false);
 std::shared_ptr<Server> global_server_ptr;
