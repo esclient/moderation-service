@@ -24,6 +24,10 @@ int main() {
         std::signal(SIGINT, signalHandler);  // Handle Ctrl+C
         std::signal(SIGTERM, signalHandler); // Docker/Kubernetes termination signal
 
+        absl::ParseCommandLine(argc, argv);
+        absl::InitializeLog();
+        absl::SetVLogLevel("*", 1); // for dev phase, comment out for production phase
+
         Config config = Config::New();
         KafkaConfig kafkaConfig = KafkaConfig::New();
 
