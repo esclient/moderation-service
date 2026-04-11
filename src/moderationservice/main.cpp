@@ -6,7 +6,6 @@
 #include "service/service.hpp"
 #include <csignal>
 #include <memory>
-#include <absl/log/globals.h>
 
 std::atomic<bool> shutdown_requested(false);
 std::shared_ptr<Server> global_server_ptr;
@@ -21,13 +20,10 @@ void signalHandler(int signum) {
 }
 
 int main() {
+    grpc_init();
     try {
         std::signal(SIGINT, signalHandler);  // Handle Ctrl+C
         std::signal(SIGTERM, signalHandler); // Docker/Kubernetes termination signal
-
-        absl::ParseCommandLine(argc, argv);
-        absl::InitializeLog();
-        absl::SetVLogLevel("*", 1); // for dev phase, comment out for production phase
 
         Config config = Config::New();
         KafkaConfig kafkaConfig = KafkaConfig::New();
@@ -63,8 +59,10 @@ int main() {
         SERVICE_LOG_INFO("server shutdown complete");
     } catch (const std::exception& e) {
         SERVICE_LOG_ERROR(moderation::logging::Subsystem::kServer, "MAIN_FATAL_ERROR", e.what());
+        grpc_shutdown();
         return 1;
     }
+    grpc_shutdown();
 
     return 0;
 }
