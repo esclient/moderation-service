@@ -4,6 +4,7 @@
 #include "repository/repository.hpp"
 #include "server/server.hpp"
 #include "service/service.hpp"
+#include "interceptors/log_sink.hpp"
 #include <csignal>
 #include <memory>
 
@@ -20,7 +21,9 @@ void signalHandler(int signum) {
 }
 
 int main() {
+    moderation::logging::InstallReadableSink();
     grpc_init();
+    moderation::logging::ActivateReadableSink();
     try {
         std::signal(SIGINT, signalHandler);  // Handle Ctrl+C
         std::signal(SIGTERM, signalHandler); // Docker/Kubernetes termination signal

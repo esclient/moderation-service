@@ -26,6 +26,15 @@ enum class Subsystem {
     kUnknown
 };
 
+inline absl::TimeZone GetLocalTZ() {
+    static absl::TimeZone timezone = [] {
+        absl::TimeZone time;
+        absl::LoadTimeZone("Europe/Berlin", &time);
+        return time;
+    }();
+    return timezone;
+}
+
 inline absl::string_view SubsystemName(Subsystem systemName) {
     switch (systemName) {
         case Subsystem::kGrpc: return "grpc";
@@ -119,7 +128,7 @@ inline absl::string_view GrpcCodeName(grpc::StatusCode code) {
 }
 
 inline std::string FormatError(Subsystem subsystem, grpc::StatusCode code, absl::string_view message) {
-    const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3SZ", absl::Now(), absl::UTCTimeZone());
+    const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3S%Ez", absl::Now(), GetLocalTZ());
     return absl::StrCat(
         "timespan=", timespan,
         " subsystem=", SubsystemName(subsystem),
@@ -134,7 +143,7 @@ inline std::string FormatError(Subsystem subsystem, grpc::Status status, absl::s
 }
 
 inline std::string FormatError(Subsystem subsystem, RdKafka::ErrorCode code, absl::string_view message) {
-    const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3SZ", absl::Now(), absl::UTCTimeZone());
+    const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3S%Ez", absl::Now(), GetLocalTZ());
     return absl::StrCat(
         "timespan=", timespan,
         " subsystem=", SubsystemName(subsystem),
@@ -144,7 +153,7 @@ inline std::string FormatError(Subsystem subsystem, RdKafka::ErrorCode code, abs
 }
 
 inline std::string FormatError(Subsystem subsystem, UErrorCode code, absl::string_view message) {
-    const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3SZ", absl::Now(), absl::UTCTimeZone());
+    const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3S%Ez", absl::Now(), GetLocalTZ());
     return absl::StrCat(
         "timespan=", timespan,
         " subsystem=", SubsystemName(subsystem),
@@ -154,7 +163,7 @@ inline std::string FormatError(Subsystem subsystem, UErrorCode code, absl::strin
 }
 
 inline std::string FormatError(Subsystem subsystem, absl::string_view code, absl::string_view message) {
-    const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3SZ", absl::Now(), absl::UTCTimeZone());
+    const auto timespan = absl::FormatTime("%Y-%m-%dT%H:%M:%E3S%Ez", absl::Now(), GetLocalTZ());
     return absl::StrCat(
         "timespan=", timespan,
         " subsystem=", SubsystemName(subsystem),
