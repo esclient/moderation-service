@@ -1,6 +1,6 @@
 #include "server/server.hpp"
+#include "interceptors/logger.hpp"
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -24,12 +24,13 @@ void Server::Start() {
     builder.experimental().SetInterceptorCreators(std::move(this->interceptor_creators_));
 
     this->server_ = builder.BuildAndStart();
-    std::cout << this->server_name_ << " listening on " << this->server_address_ << "\n";
+    SERVICE_LOG_INFO(
+        absl::StrCat(this->server_name_, " listening on ", this->server_address_));
     this->server_->Wait();
 }
 
 void Server::Stop() {
-    std::cout << "Shutting down " << this->server_name_ << "..." << "\n";
+    SERVICE_LOG_INFO(absl::StrCat("shutting down ", this->server_name_));
     this->server_->Shutdown();
-    std::cout << this->server_name_ << " shut down." << "\n";
+    SERVICE_LOG_INFO(absl::StrCat(this->server_name_, " shut down"));
 }

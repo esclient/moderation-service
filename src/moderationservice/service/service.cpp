@@ -1,6 +1,6 @@
 #include "service/service.hpp"
+#include "interceptors/logger.hpp"
 #include "model/model_utils.hpp"
-#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -18,10 +18,12 @@ void ModerationService::InitializeKafkaCallback() {
             if (auto self = weakThis.lock()) {
                 self->HandleModerationResult(response, request_id, originalText, object_type);
             } else {
-                std::cerr << "ModerationService expired, cannot handle result" << "\n";
+                SERVICE_LOG_ERROR(moderation::logging::Subsystem::kService, "SERVICE_EXPIRED",
+                                  "ModerationService expired, cannot handle result");
             }
         } catch (const std::exception& e) {
-            std::cerr << "Error in Kafka callback: " << e.what() << "\n";
+            SERVICE_LOG_ERROR(moderation::logging::Subsystem::kKafka, "KAFKA_CALLBACK_FAIL",
+                              e.what());
         }
     };
     kafkaClient_->Initialize(callback);
@@ -29,9 +31,8 @@ void ModerationService::InitializeKafkaCallback() {
 bool ModerationService::ProcessModerationRequest(int64_t request_id, const std::string& text) {
     try {
         if (text.empty() || request_id == 0) {
-            std::cerr << "[Service] ERROR: Invalid moderation request. Text is empty or request ID "
-                         "is zero."
-                      << "\n";
+            SERVICE_LOG_ERROR(moderation::logging::Subsystem::kService, grpc::StatusCode::INVALID_ARGUMENT,
+                              "invalid moderation request: text empty or request_id is zero");
             return false;
         }
 
@@ -40,14 +41,15 @@ bool ModerationService::ProcessModerationRequest(int64_t request_id, const std::
         kafka_request.set_text(text);
 
         if (!kafkaClient_->SendRequestAsync(kafka_request)) {
-            std::cerr << "[Service] ERROR: Failed to send moderation request to Kafka."
-                      << request_id << "\n";
+            SERVICE_LOG_ERROR(moderation::logging::Subsystem::kKafka, "SEND_REQUEST_FAIL",
+                              absl::StrCat("failed to send moderation request request_id=", request_id));
             return false;
         }
 
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "[Service] ERROR: " << e.what() << "\n";
+        SERVICE_LOG_ERROR(moderation::logging::Subsystem::kService, grpc::StatusCode::INTERNAL,
+                          e.what());
         return false;
     }
 }
@@ -61,14 +63,14 @@ void ModerationService::HandleModerationResult(const moderation::ModerateObjectR
             std::string reason =
                 "Violates content policy"; // This can be enhanced to provide specific
                                            // reasons based on the response
-            std::cout << "Text flagged for moderation, request id: " << request_id << "\n";
+            SERVICE_VLOG1(absl::StrCat("text flagged request_id=", request_id));
             SaveResultToDatabase(request_id, originalText, isFlagged, reason, objectType);
 
         } else {
-            std::cout << "Text passed moderation: " << request_id << "\n";
+            SERVICE_VLOG1(absl::StrCat("text passed request_id=", request_id));
         }
     } catch (const std::exception& e) {
-        std::cerr << "Error handling moderation result: " << e.what() << "\n";
+        SERVICE_LOG_ERROR(moderation::logging::Subsystem::kService, "HANDLE_RESULT_FAIL", e.what());
     }
 }
 
@@ -84,12 +86,11 @@ void ModerationService::SaveResultToDatabase(int64_t object_id, const std::strin
     record.reason = reason;
 
     if (!repository_->SaveModerationResult(record)) {
-        std::cerr << "Failed to save moderation result to database for object ID: " << object_id
-                  << "\n";
+        SERVICE_LOG_ERROR(moderation::logging::Subsystem::kRepository, "SAVE_RESULT_FAIL",
+                          absl::StrCat("failed to save moderation result object_id=", object_id));
     } else {
         std::string type_name = moderation::utils::ObjectTypeToString(object_type);
-
-        std::cout << "Moderation result saved to database for object ID: " << object_id
-                  << ", Type: " << type_name << "\n";
+        SERVICE_VLOG1(absl::StrCat("moderation result saved object_id=", object_id,
+                                   " type=", type_name));
     }
 }

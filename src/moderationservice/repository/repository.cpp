@@ -1,5 +1,5 @@
 #include "repository/repository.hpp"
-#include <iostream>
+#include "interceptors/logger.hpp"
 #include <memory>
 #include <string>
 
@@ -9,7 +9,8 @@ ModerationRepository::ModerationRepository(const std::string& database_url)
     try {
         db_connection_ = std::make_unique<pqxx::connection>(database_url_);
     } catch (const std::exception& e) {
-        std::cerr << "Database connection error: " << e.what() << "\n";
+        SERVICE_LOG_ERROR(moderation::logging::Subsystem::kRepository, "DB_CONNECTION_FAIL",
+                          e.what());
         throw;
     }
 }
@@ -19,7 +20,8 @@ ModerationRepository::~ModerationRepository() = default;
 bool ModerationRepository::SaveModerationResult(const ModerationRecord& result) {
     try {
         if (!db_connection_ || !db_connection_->is_open()) {
-            std::cerr << "Database connection is not open." << "\n";
+            SERVICE_LOG_ERROR(moderation::logging::Subsystem::kRepository, "DB_NOT_OPEN",
+                              "database connection is not open");
             return false;
         }
 
@@ -45,7 +47,7 @@ bool ModerationRepository::SaveModerationResult(const ModerationRecord& result) 
         transaction.commit();
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "Error saving moderation result: " << e.what() << "\n";
+        SERVICE_LOG_ERROR(moderation::logging::Subsystem::kRepository, "DB_SAVE_FAIL", e.what());
         return false;
     }
 }

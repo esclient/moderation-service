@@ -1,5 +1,5 @@
 #include "handler/handler.hpp"
-#include <iostream>
+#include "interceptors/logger.hpp"
 #include <string>
 #include <utility>
 
@@ -11,8 +11,9 @@ grpc::Status ModerationHandler::ModerateObject(grpc::ServerContext* context,
                                                moderation::ModerateObjectResponse* response) {
     if (request->text().empty() || request->id() == 0) {
         response->set_success(false);
-        std::cerr << "[Handler] ERROR: Invalid moderation request. Text is empty or request ID is "
-                     "zero.\n";
+        SERVICE_LOG_ERROR(moderation::logging::Subsystem::kGrpc,
+                          grpc::StatusCode::INVALID_ARGUMENT,
+                          "invalid moderation request: text empty or request id is zero");
         return {grpc::INVALID_ARGUMENT, "Invalid moderation request"};
     }
 
@@ -23,8 +24,8 @@ grpc::Status ModerationHandler::ModerateObject(grpc::ServerContext* context,
 
     if (!success) {
         response->set_success(false);
-        std::cerr << "[Handler] ERROR: Failed to process moderation request for ID: " << requestId
-                  << "\n";
+        SERVICE_LOG_ERROR(moderation::logging::Subsystem::kGrpc, grpc::StatusCode::INTERNAL,
+                          absl::StrCat("failed to process moderation request request_id=", requestId));
         return {grpc::INTERNAL, "Failed to process moderation request"};
     }
 

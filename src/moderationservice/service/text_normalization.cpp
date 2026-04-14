@@ -1,6 +1,6 @@
 #include "service/text_normalization.hpp"
+#include "interceptors/logger.hpp"
 #include "model/unicode_constants.hpp"
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -13,14 +13,16 @@ std::string TextNormalization(const std::string& textN) {
     const icu::Normalizer2* normalizer = icu::Normalizer2::getNFCInstance(status);
 
     if (U_FAILURE(status) != 0) {
-        std::cerr << "Error getting normalizer" << "\n";
+        SERVICE_LOG_ERROR(moderation::logging::Subsystem::kIcu, status,
+                          "failed to get ICU NFC normalizer");
         return "";
     }
 
     icu::UnicodeString normalized = normalizer->normalize(text, status);
 
     if (U_FAILURE(status) != 0) {
-        std::cerr << "Error normalizing" << "\n";
+        SERVICE_LOG_ERROR(moderation::logging::Subsystem::kIcu, status,
+                          "failed to normalize text with ICU");
         return "";
     }
 
